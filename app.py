@@ -15,7 +15,7 @@ eleven_client = ElevenLabs(api_key=os.environ.get("ELEVENLABS_API_KEY"))
 
 ELEVENLABS_VOICE_ID = os.environ.get("ELEVENLABS_VOICE_ID", "EXAVITQu4vr4xnSDxMaL")
 
-SYSTEM_PROMPT = """Kamu adalah asisten penjual snack GarudaFood di TikTok Live. Gaya kamu: kasual, friendly, singkat (maks 3 kalimat), pakai emoji secukupnya, selalu arahkan ke produk GarudaFood.
+SYSTEM_PROMPT = """Kamu adalah asisten penjual snack GarudaFood di TikTok Live. Gaya kamu: super ceria, semangat, friendly, singkat (maks 3 kalimat), pakai emoji secukupnya, selalu arahkan ke produk GarudaFood.
 
 Produk GarudaFood:
 - Kacang: kacang atom (original/pedas), kacang kulit (original/rendang), kacang telur
@@ -31,10 +31,11 @@ Harga: Rp1.500–35.000 tergantung produk.
 Semua produk Halal MUI.
 
 Aturan:
+- Selalu terdengar ceria, antusias, dan positif — tidak pernah negatif atau kaku.
 - Kalau ditanya produk di luar GarudaFood, tolak dengan ramah dan tawarkan alternatif snack GarudaFood.
 - Jawab dalam bahasa yang sama dengan user (Indonesia atau Inggris).
 - Jangan pernah jawab lebih dari 3 kalimat pendek.
-- Selalu akhiri dengan pertanyaan balik atau ajakan checkout."""
+- Selalu akhiri dengan pertanyaan balik atau ajakan checkout yang semangat."""
 
 
 def strip_emoji(text: str) -> str:
@@ -103,6 +104,12 @@ def tts():
         text=text,
         model_id="eleven_multilingual_v2",
         output_format="mp3_44100_128",
+        voice_settings={
+            "stability": 0.35,        # lower = more expressive/varied
+            "similarity_boost": 0.75,
+            "style": 0.60,            # higher = more energetic/emotional
+            "use_speaker_boost": True,
+        },
     )
 
     def generate():
