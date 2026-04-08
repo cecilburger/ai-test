@@ -1,5 +1,24 @@
 import random
 import re
+from difflib import get_close_matches
+
+# ---------------------------------------------------------------------------
+# Typo correction — map common product names to canonical form
+# ---------------------------------------------------------------------------
+
+PRODUCT_VOCAB = [
+    "chocolatos", "kacang", "beng-beng", "bengbeng", "leo", "gery",
+    "okky", "pilus", "clevo", "garuda", "wafer", "biskuit", "chips",
+]
+
+def fix_typos(text: str) -> str:
+    words = text.split()
+    corrected = []
+    for word in words:
+        w = word.lower().strip("?!.,")
+        matches = get_close_matches(w, PRODUCT_VOCAB, n=1, cutoff=0.75)
+        corrected.append(matches[0] if matches else word)
+    return " ".join(corrected)
 
 # ---------------------------------------------------------------------------
 # Intent detection — rule-based, no model needed
@@ -58,7 +77,7 @@ RULES = [
 
 
 def detect_intent(text: str) -> str:
-    t = text.lower()
+    t = fix_typos(text).lower()
     for intent, pattern in RULES:
         if re.search(pattern, t):
             return intent
@@ -292,10 +311,10 @@ TEMPLATES = {
         ),
     ],
     "out_of_scope": [
-        (
-            "Maaf kak 😊 Aku khusus bantu soal produk snack GarudaFood aja nih\n"
-            "Kalau mau rekomendasi snack enak, aku siap bantu! 👌"
-        ),
+        "Maaf kak 😊 Itu bukan produk GarudaFood nih\nKalau mau rekomendasi snack enak dari kami, aku siap bantu! 👌",
+        "Wah itu bukan produk kami kak 😄 GarudaFood fokus ke snack ya\nMau aku rekomendasiin yang enak?",
+        "Kayaknya itu bukan dari GarudaFood deh kak 😊\nTapi kalau mau snack enak, aku bisa bantu rekomendasiin lho!",
+        "Hmm itu di luar produk kami kak 🙏\nGarudaFood punya banyak snack enak kok, mau coba yang mana?",
     ],
 }
 
