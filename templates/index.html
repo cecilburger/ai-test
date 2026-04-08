@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Garuda Food Chatbot</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f5f5f0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .chat-container {
+      width: 100%;
+      max-width: 720px;
+      height: 90vh;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .chat-header {
+      background: #d62b27;
+      color: white;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .chat-header .logo {
+      width: 40px;
+      height: 40px;
+      background: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      color: #d62b27;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .chat-header h1 {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .chat-header p {
+      font-size: 13px;
+      opacity: 0.85;
+    }
+
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .message {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .message.user {
+      flex-direction: row-reverse;
+    }
+
+    .avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: bold;
+      color: white;
+    }
+
+    .message.bot .avatar { background: #d62b27; }
+    .message.user .avatar { background: #555; }
+
+    .bubble {
+      max-width: 75%;
+      padding: 12px 16px;
+      border-radius: 16px;
+      font-size: 14px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .message.bot .bubble {
+      background: #f0f0ed;
+      border-top-left-radius: 4px;
+      color: #222;
+    }
+
+    .message.user .bubble {
+      background: #d62b27;
+      color: white;
+      border-top-right-radius: 4px;
+    }
+
+    .typing-indicator {
+      display: flex;
+      gap: 4px;
+      padding: 4px 0;
+    }
+
+    .typing-indicator span {
+      width: 8px;
+      height: 8px;
+      background: #aaa;
+      border-radius: 50%;
+      animation: bounce 1.2s infinite;
+    }
+
+    .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes bounce {
+      0%, 60%, 100% { transform: translateY(0); }
+      30% { transform: translateY(-6px); }
+    }
+
+    .input-area {
+      padding: 16px 20px;
+      border-top: 1px solid #eee;
+      display: flex;
+      gap: 10px;
+      background: #fff;
+    }
+
+    .input-area textarea {
+      flex: 1;
+      padding: 10px 14px;
+      border: 1px solid #ddd;
+      border-radius: 24px;
+      font-size: 14px;
+      font-family: inherit;
+      resize: none;
+      outline: none;
+      line-height: 1.5;
+      max-height: 120px;
+      transition: border-color 0.2s;
+    }
+
+    .input-area textarea:focus {
+      border-color: #d62b27;
+    }
+
+    .input-area button {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: #d62b27;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.2s;
+      align-self: flex-end;
+    }
+
+    .input-area button:hover { background: #b52220; }
+    .input-area button:disabled { background: #ccc; cursor: not-allowed; }
+
+    .input-area button svg {
+      width: 20px;
+      height: 20px;
+      fill: white;
+    }
+
+    .welcome {
+      text-align: center;
+      color: #888;
+      font-size: 13px;
+      padding: 10px 0 4px;
+    }
+
+    .suggestions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-top: 8px;
+    }
+
+    .suggestion-btn {
+      background: none;
+      border: 1px solid #d62b27;
+      color: #d62b27;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .suggestion-btn:hover {
+      background: #d62b27;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div class="chat-container">
+    <div class="chat-header">
+      <div class="logo">G</div>
+      <div>
+        <h1>Garuda Food Assistant</h1>
+        <p>Ask me anything about our snack products!</p>
+      </div>
+    </div>
+
+    <div class="messages" id="messages">
+      <div class="welcome">
+        Welcome! I'm your Garuda Food snack guide. 🥜🍫
+        <div class="suggestions">
+          <button class="suggestion-btn" onclick="sendSuggestion(this)">What snacks do you have?</button>
+          <button class="suggestion-btn" onclick="sendSuggestion(this)">Tell me about Kacang Garuda</button>
+          <button class="suggestion-btn" onclick="sendSuggestion(this)">What's in Chocolatos?</button>
+          <button class="suggestion-btn" onclick="sendSuggestion(this)">Recommend a sweet snack</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="input-area">
+      <textarea
+        id="userInput"
+        placeholder="Ask about Garuda Food products..."
+        rows="1"
+        onkeydown="handleKeyDown(event)"
+        oninput="autoResize(this)"
+      ></textarea>
+      <button id="sendBtn" onclick="sendMessage()">
+        <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <script>
+    const messagesEl = document.getElementById("messages");
+    const inputEl = document.getElementById("userInput");
+    const sendBtn = document.getElementById("sendBtn");
+    let conversationHistory = [];
+    let isStreaming = false;
+
+    function autoResize(el) {
+      el.style.height = "auto";
+      el.style.height = Math.min(el.scrollHeight, 120) + "px";
+    }
+
+    function handleKeyDown(e) {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    }
+
+    function sendSuggestion(btn) {
+      inputEl.value = btn.textContent;
+      sendMessage();
+    }
+
+    function scrollToBottom() {
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    function appendMessage(role, text) {
+      const div = document.createElement("div");
+      div.className = `message ${role}`;
+      const initial = role === "bot" ? "G" : "U";
+      div.innerHTML = `
+        <div class="avatar">${initial}</div>
+        <div class="bubble">${escapeHtml(text)}</div>
+      `;
+      messagesEl.appendChild(div);
+      scrollToBottom();
+      return div.querySelector(".bubble");
+    }
+
+    function showTyping() {
+      const div = document.createElement("div");
+      div.className = "message bot";
+      div.id = "typing";
+      div.innerHTML = `
+        <div class="avatar">G</div>
+        <div class="bubble">
+          <div class="typing-indicator">
+            <span></span><span></span><span></span>
+          </div>
+        </div>
+      `;
+      messagesEl.appendChild(div);
+      scrollToBottom();
+    }
+
+    function removeTyping() {
+      const el = document.getElementById("typing");
+      if (el) el.remove();
+    }
+
+    function escapeHtml(text) {
+      return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    async function sendMessage() {
+      const text = inputEl.value.trim();
+      if (!text || isStreaming) return;
+
+      isStreaming = true;
+      sendBtn.disabled = true;
+      inputEl.value = "";
+      inputEl.style.height = "auto";
+
+      conversationHistory.push({ role: "user", content: text });
+      appendMessage("user", text);
+      showTyping();
+
+      let botBubble = null;
+      let botText = "";
+
+      try {
+        const response = await fetch("/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ messages: conversationHistory }),
+        });
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          const lines = chunk.split("\n");
+
+          for (const line of lines) {
+            if (!line.startsWith("data: ")) continue;
+            const raw = line.slice(6).trim();
+            if (raw === "[DONE]") break;
+
+            try {
+              const { text: delta } = JSON.parse(raw);
+              if (delta) {
+                if (!botBubble) {
+                  removeTyping();
+                  botBubble = appendMessage("bot", "");
+                }
+                botText += delta;
+                botBubble.textContent = botText;
+                scrollToBottom();
+              }
+            } catch (_) {}
+          }
+        }
+
+        if (botText) {
+          conversationHistory.push({ role: "assistant", content: botText });
+        }
+      } catch (err) {
+        removeTyping();
+        appendMessage("bot", "Sorry, something went wrong. Please try again.");
+        conversationHistory.pop();
+      } finally {
+        isStreaming = false;
+        sendBtn.disabled = false;
+        inputEl.focus();
+      }
+    }
+  </script>
+</body>
+</html>
