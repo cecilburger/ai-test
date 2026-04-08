@@ -1,74 +1,141 @@
 QA_DATA = [
     # Greetings
     {
-        "keywords": ["halo", "hai", "hello", "hi", "hey", "selamat", "pagi", "siang", "sore", "malam"],
+        "keywords": ["halo", "hai", "hello", "hi", "hey"],
         "answer": "Halo kak 👋 Lagi cari snack apa hari ini? 😄 Manis atau gurih?",
     },
-    # Thanks / closing
+    {
+        "keywords": ["selamat", "pagi", "siang", "sore", "malam"],
+        "answer": "Halo kak 👋 Lagi cari snack apa hari ini? 😄 Manis atau gurih?",
+    },
+    # Thanks
     {
         "keywords": ["makasih", "terima kasih", "thank", "thanks", "thx"],
         "answer": "Sama-sama 😊 Selamat ngemil ya! 🍫🥜 Kalau butuh rekomendasi lagi, tinggal chat aja 👍",
     },
-    # Vague / unclear
+    # All products / what do you have
     {
-        "keywords": ["enak", "rekomen", "suggest", "saran", "bagus", "ada yang"],
-        "answer": "Hehe banyak 😄 Kamu lagi pengen yang:\n👉 manis\n👉 gurih\n👉 atau ringan buat ngemil?",
+        "keywords": ["produk", "product", "snack", "what", "have", "semua", "list", "apa saja", "brand", "jual", "sell"],
+        "answer": (
+            "Ini produk snack Garuda Food:\n\n"
+            "🥜 Kacang Garuda – kacang panggang\n"
+            "🍫 Chocolatos – wafer stick coklat\n"
+            "🍪 Gery – biskuit & wafer\n"
+            "🍮 Okky – jelly & minuman\n"
+            "🥔 Leo – chips & crackers\n"
+            "🍫 Beng-Beng – wafer bar coklat caramel\n"
+            "🥛 Clevo – snack berbasis susu\n\n"
+            "Mau tau lebih lanjut yang mana? 😄"
+        ),
+    },
+    # Chocolatos flavors (must be before general chocolatos entry)
+    {
+        "keywords": ["chocolatos", "rasa", "varian", "flavor", "variant"],
+        "answer": (
+            "🍫 Chocolatos ada beberapa varian:\n\n"
+            "• Milk – creamy & manis\n"
+            "• Dark – rich coklat pekat\n"
+            "• Matcha – green tea, unik & enak\n"
+            "• White – lembut & manis\n\n"
+            "Kamu suka yang mana? 😄"
+        ),
+    },
+    # Chocolatos general
+    {
+        "keywords": ["chocolatos", "wafer stick", "coklat stick"],
+        "answer": (
+            "🍫 Chocolatos itu favorit banyak orang!\n\n"
+            "Wafer stick coklat yang ringan & crunchy\n"
+            "Ada varian: Milk, Dark, Matcha, White\n"
+            "Harga sekitar Rp2.000–5.000 per pack\n\n"
+            "Mau tau rasa yang mana dulu? 😄"
+        ),
+    },
+    # Kacang Garuda flavors
+    {
+        "keywords": ["kacang", "rasa", "varian", "flavor"],
+        "answer": (
+            "🥜 Kacang Garuda ada beberapa varian:\n\n"
+            "• Original – gurih ringan\n"
+            "• Pedas – buat yang suka pedes 🌶️\n"
+            "• Rendang – savory banget\n"
+            "• Kulit – crispy shell-on\n\n"
+            "Suka yang mana? 😄"
+        ),
+    },
+    # Kacang Garuda general
+    {
+        "keywords": ["kacang", "peanut", "kacang garuda"],
+        "answer": (
+            "🥜 Kacang Garuda itu klasik banget!\n\n"
+            "Varian: Original, Pedas, Rendang, Kulit\n"
+            "Tinggi protein, cocok buat ngemil kapan aja 💪\n\n"
+            "Lagi pengen yang gurih biasa atau pedas?"
+        ),
     },
     # Sweet recommendation
     {
-        "keywords": ["manis", "sweet", "coklat", "chocolate"],
+        "keywords": ["manis", "sweet", "recommend", "rekomen"],
         "answer": (
-            "Ada dong 😊 Kalau suka coklat, kamu bisa coba:\n"
+            "Kalau suka manis, coba ini kak:\n\n"
+            "🍫 Beng-Beng – wafer + caramel + coklat, best seller!\n"
+            "🍫 Chocolatos – wafer stick coklat, ringan & crunchy\n"
+            "🍪 Gery Saluut – wafer roll coklat\n\n"
+            "Mau yang lebih kenyang atau yang ringan aja?"
+        ),
+    },
+    # Chocolate
+    {
+        "keywords": ["coklat", "chocolate"],
+        "answer": (
+            "Ada dong 😊 Pilihan coklat dari Garuda Food:\n\n"
             "🍫 Beng-Beng – wafer + caramel + coklat\n"
-            "🍫 Chocolatos – wafer stick coklat, enak banget buat ngemil\n\n"
+            "🍫 Chocolatos – wafer stick coklat\n\n"
             "Mau yang manis ringan atau yang lebih kenyang?"
         ),
     },
     # Light snack
     {
-        "keywords": ["ringan", "light", "tipis", "kecil"],
+        "keywords": ["ringan", "light"],
         "answer": (
-            "Oke 👍 Kalau yang ringan aku saranin:\n"
-            "🍫 Chocolatos – teksturnya ringan & crunchy\n\n"
-            "Ada varian:\n• Milk\n• Dark\n• Matcha\n\n"
-            "Kamu biasanya suka rasa apa? 😄"
+            "Kalau yang ringan aku saranin:\n\n"
+            "🍫 Chocolatos – teksturnya ringan & crunchy\n"
+            "🍮 Okky Jelly – seger & rendah kalori\n\n"
+            "Kamu biasanya suka manis atau buah-buahan? 😄"
         ),
     },
     # Savory
     {
-        "keywords": ["gurih", "asin", "savory", "salty", "pedas", "spicy", "crispy"],
+        "keywords": ["gurih", "asin", "savory", "salty"],
         "answer": (
-            "Siap 👍 Ini rekomendasi gurih:\n"
+            "Siap 👍 Rekomendasi gurih:\n\n"
             "🥜 Kacang Garuda – classic & protein tinggi\n"
-            "🥔 Leo Chips – crispy, banyak rasa (BBQ, cheese, spicy)\n\n"
+            "🥔 Leo Chips – crispy, banyak rasa (BBQ, cheese, spicy)\n"
+            "🍪 Gery Cheese – biskuit keju gurih\n\n"
             "Lagi pengen yang pedas atau biasa?"
+        ),
+    },
+    # Spicy
+    {
+        "keywords": ["pedas", "spicy", "pedes"],
+        "answer": (
+            "🌶️ Yang pedas ada:\n\n"
+            "🥜 Kacang Garuda Pedas – pedes gurih, nagih!\n"
+            "🥔 Leo Chips Spicy – crispy & pedes\n\n"
+            "Berani coba yang mana? 😄"
         ),
     },
     # Beng-Beng
     {
         "keywords": ["beng-beng", "beng beng", "bengbeng"],
         "answer": (
-            "ENAK BANGET 😆🔥\n"
-            "🍫 Beng-Beng:\n• ada caramel\n• crunchy wafer\n• coklatnya tebel\n\n"
-            "Best seller sih ini 👍"
-        ),
-    },
-    # Chocolatos
-    {
-        "keywords": ["chocolatos", "wafer stick"],
-        "answer": (
-            "🍫 Chocolatos itu favorit banyak orang!\n\n"
-            "Varian:\n• Milk – creamy\n• Dark – rich coklat\n• Matcha – unik & enak\n\n"
-            "Harga sekitar Rp2.000–5.000 per pack. Mau yang rasa apa? 😄"
-        ),
-    },
-    # Kacang Garuda
-    {
-        "keywords": ["kacang", "peanut", "kacang garuda"],
-        "answer": (
-            "🥜 Kacang Garuda itu klasik banget!\n\n"
-            "Varian:\n• Original – gurih ringan\n• Pedas – buat yang suka pedes\n• Rendang – savory banget\n\n"
-            "Tinggi protein, cocok buat ngemil kapan aja 💪"
+            "ENAK BANGET 😆🔥\n\n"
+            "🍫 Beng-Beng:\n"
+            "• Wafer crunchy berlapis\n"
+            "• Caramel di tengah\n"
+            "• Dibalut coklat susu\n\n"
+            "Ada varian Original & Maxx (ukuran lebih besar)\n"
+            "Best seller nih 👍"
         ),
     },
     # Leo chips
@@ -76,18 +143,20 @@ QA_DATA = [
         "keywords": ["leo", "chips", "keripik", "cracker"],
         "answer": (
             "🥔 Leo Chips itu crunchy & addictive!\n\n"
-            "Rasa:\n• BBQ\n• Cheese\n• Spicy\n• Original\n\n"
-            "Cocok buat nonton atau santai 😄 Suka yang rasa apa?"
+            "Rasa: BBQ, Cheese, Spicy, Original, Seaweed\n"
+            "Ada juga Leo Cassava Chips dari singkong\n\n"
+            "Suka yang rasa apa? 😄"
         ),
     },
     # Gery
     {
-        "keywords": ["gery", "biskuit", "biscuit", "cookie", "wafer"],
+        "keywords": ["gery", "biskuit", "biscuit", "cookie"],
         "answer": (
             "🍪 Gery punya banyak pilihan!\n\n"
             "• Gery Malkist – crispy layered\n"
             "• Gery Saluut – wafer roll coklat\n"
-            "• Gery Cheese – gurih keju\n\n"
+            "• Gery Cheese – gurih keju\n"
+            "• Gery Pasta – wafer krim\n\n"
             "Cocok buat cemilan atau bekal 😊"
         ),
     },
@@ -121,7 +190,7 @@ QA_DATA = [
             "🍮 Okky Jelly – Rp1.500–5.000\n"
             "🥔 Leo Chips – Rp5.000–20.000\n"
             "🍫 Beng-Beng – Rp3.000–8.000\n\n"
-            "Tergantung beli di mana ya (Indomaret, Alfamart, atau online) 😊"
+            "Tergantung beli di mana ya 😊"
         ),
     },
     # Where to buy
@@ -136,7 +205,7 @@ QA_DATA = [
     },
     # Ingredients
     {
-        "keywords": ["bahan", "ingredient", "contain", "terbuat", "komposisi", "alergi", "allergen"],
+        "keywords": ["bahan", "ingredient", "contain", "terbuat", "komposisi"],
         "answer": (
             "Bahan utama produk kami:\n\n"
             "🥜 Kacang Garuda – kacang, garam, minyak nabati\n"
@@ -148,14 +217,26 @@ QA_DATA = [
             "Untuk info lengkap, cek kemasan produk ya 😊"
         ),
     },
+    # Allergen
+    {
+        "keywords": ["alergi", "allergen", "susu", "gluten", "kacang alergi"],
+        "answer": (
+            "⚠️ Info alergen:\n\n"
+            "• Chocolatos & Beng-Beng – mengandung susu & gluten\n"
+            "• Kacang Garuda – mengandung kacang tanah\n"
+            "• Gery – mengandung gluten\n"
+            "• Okky Jelly – bebas gluten & susu\n\n"
+            "Selalu cek label kemasan untuk info lengkap ya kak 😊"
+        ),
+    },
     # Halal
     {
-        "keywords": ["halal", "mui", "sertifikat", "certif"],
+        "keywords": ["halal", "mui", "sertifikat"],
         "answer": "✅ Semua produk Garuda Food sudah bersertifikat Halal MUI ya kak! Logo halal ada di setiap kemasan 😊",
     },
     # Nutrition
     {
-        "keywords": ["kalori", "nutrition", "gizi", "sehat", "protein", "lemak", "fat", "healthy"],
+        "keywords": ["kalori", "nutrition", "gizi", "sehat", "protein", "lemak"],
         "answer": (
             "Info gizi per sajian:\n\n"
             "🥜 Kacang Garuda (30g) – ~170 kkal, 7g protein\n"
@@ -166,22 +247,14 @@ QA_DATA = [
             "Untuk info lengkap cek label kemasan ya 😊"
         ),
     },
-    # All products
+    # Vague
     {
-        "keywords": ["produk", "product", "semua", "list", "apa saja", "brand", "jual"],
-        "answer": (
-            "Ini produk snack Garuda Food:\n\n"
-            "🥜 Kacang Garuda – kacang panggang\n"
-            "🍫 Chocolatos – wafer stick coklat\n"
-            "🍪 Gery – biskuit & wafer\n"
-            "🍮 Okky – jelly & minuman\n"
-            "🥔 Leo – chips & crackers\n"
-            "🍫 Beng-Beng – wafer bar coklat caramel\n"
-            "🥛 Clevo – snack berbasis susu\n\n"
-            "Mau tau lebih lanjut yang mana? 😄"
-        ),
+        "keywords": ["enak", "bagus", "ada yang", "mau"],
+        "answer": "Hehe banyak 😄 Kamu lagi pengen yang:\n👉 manis\n👉 gurih\n👉 atau ringan buat ngemil?",
     },
 ]
 
-# Out-of-scope fallback
-OUT_OF_SCOPE = "Maaf ya kak 😊 Untuk saat ini kami hanya menyediakan produk snack dari Garuda Food\nKalau mau, aku bisa rekomendasiin snack yang cocok buat kamu 👌"
+OUT_OF_SCOPE = (
+    "Maaf ya kak 😊 Aku khusus bantu soal produk snack Garuda Food aja\n"
+    "Kalau mau, aku bisa rekomendasiin snack yang cocok buat kamu 👌"
+)
