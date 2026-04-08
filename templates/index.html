@@ -221,6 +221,20 @@
       background: #d62b27;
       color: white;
     }
+
+    .voice-toggle {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 20px;
+      font-size: 18px;
+      opacity: 0.8;
+      transition: opacity 0.2s;
+      margin-left: auto;
+    }
+    .voice-toggle:hover { opacity: 1; }
+    .voice-toggle.muted { opacity: 0.35; }
   </style>
 </head>
 <body>
@@ -231,6 +245,7 @@
         <h1>Garuda Food Assistant</h1>
         <p>Ask me anything about our snack products!</p>
       </div>
+      <button class="voice-toggle" id="voiceBtn" onclick="toggleVoice()" title="Toggle voice">🔊</button>
     </div>
 
     <div class="messages" id="messages">
@@ -260,7 +275,53 @@
   </div>
 
   <script>
-    const messagesEl = document.getElementById("messages");
+    // ── Voice (Web Speech API TTS) ──────────────────────────────────────
+    let voiceEnabled = true;
+    let voices = [];
+
+    function toggleVoice() {
+      voiceEnabled = !voiceEnabled;
+      const btn = document.getElementById("voiceBtn");
+      btn.textContent = voiceEnabled ? "🔊" : "🔇";
+      btn.classList.toggle("muted", !voiceEnabled);
+      if (!voiceEnabled) speechSynthesis.cancel();
+    }
+
+    function loadVoices() {
+      voices = speechSynthesis.getVoices();
+    }
+    speechSynthesis.onvoiceschanged = loadVoices;
+    loadVoices();
+
+    function pickVoice() {
+      // Prefer Indonesian female voice, fallback to any Indonesian, then default
+      return (
+        voices.find(v => v.lang === "id-ID" && v.name.toLowerCase().includes("female")) ||
+        voices.find(v => v.lang === "id-ID") ||
+        voices.find(v => v.lang.startsWith("id")) ||
+        voices[0] ||
+        null
+      );
+    }
+
+    function stripEmoji(text) {
+      return text.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, "").trim();
+    }
+
+    function speak(text) {
+      if (!voiceEnabled || !("speechSynthesis" in window)) return;
+      speechSynthesis.cancel();
+      const clean = stripEmoji(text);
+      if (!clean) return;
+      const utt = new SpeechSynthesisUtterance(clean);
+      const voice = pickVoice();
+      if (voice) utt.voice = voice;
+      utt.lang = "id-ID";
+      utt.rate = 1.05;
+      utt.pitch = 1.1;
+      speechSynthesis.speak(utt);
+    }
+    // ────────────────────────────────────────────────────────────────────
     const inputEl = document.getElementById("userInput");
     const sendBtn = document.getElementById("sendBtn");
     let conversationHistory = [];
@@ -384,6 +445,7 @@
 
         if (botText) {
           conversationHistory.push({ role: "assistant", content: botText });
+          speak(botText);
         }
       } catch (err) {
         removeTyping();
