@@ -1,34 +1,37 @@
 import json
-import re
+import os
+import torch
 from flask import Flask, render_template, request, Response, stream_with_context
-from qa_data import QA_DATA, OUT_OF_SCOPE
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
+from intents import INTENTS
+from templates import generate_response
 
 app = Flask(__name__)
 
+MODEL_PATH = "intent_model"
+_tokenizer = None
+_model = None
 
-def find_answer(user_message: str) -> str:
-    text = user_message.lower()
-    words = set(re.findall(r"\b\w+\b", text))
 
-    best_match = None
-    best_score = 0.0
+def load_model():
+    global _tokenizer, _model
+    if os.path.exists(MODEL_PATH):
+        _tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH)
+        _model = AutoModelForSequenceClassification.from_pretrained(MODEL_PATH)
+        _model.eval()
+        print("Intent model loaded.")
+    else:
+        print("WARNING: intent_model not found. Run python train_model.py first.")
 
-    for entry in QA_DATA:
-        kws = entry["keywords"]
-        hits = sum(1 for kw in kws if kw in text or kw in words)
-        if hits == 0:
-            continue
-        # Normalize: ratio of matched keywords — rewards specificity
-        score = hits / len(kws)
-        if score > best_score or (score == best_score and hits > (best_match and sum(1 for kw in best_match["keywords"] if kw in text or kw in words) or 0)):
-            best_score = score
-            best_match = entry
 
-    # Require at least 1 hit and a reasonable match ratio
-    if best_match and best_score >= 0.2:
-        return best_match["answer"]
-
-    return OUT_OF_SCOPE
+def predict_intent(text: str) -> str:
+    if _model is None or _tokenizer is None:
+        return "out_of_scope"
+    inputs = _tokenizer(text, return_tensors="pt", truncation=True, padding=True, max_length=32)
+    with torch.no_grad():
+        outputs = _model(**inputs)
+    predicted = torch.argmax(outputs.logits).item()
+    return INTENTS[predicted]
 
 
 def stream_text(text: str):
@@ -52,14 +55,17 @@ def chat():
             last_user_message = m.get("content", "")
             break
 
-    answer = find_answer(last_user_message)
+    intent = predict_intent(last_user_message)
+    response = generate_response(intent, context=last_user_message)
 
     return Response(
-        stream_with_context(stream_text(answer)),
+        stream_with_context(stream_text(response)),
         mimetype="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
 
+
+load_model()
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)

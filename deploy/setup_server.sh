@@ -17,7 +17,10 @@ python3 -m venv $APP_DIR/venv
 
 echo "=== Installing Python dependencies ==="
 $APP_DIR/venv/bin/pip install --upgrade pip
-$APP_DIR/venv/bin/pip install flask anthropic python-dotenv gunicorn
+$APP_DIR/venv/bin/pip install flask python-dotenv gunicorn torch transformers
+
+echo "=== Training intent model ==="
+cd $APP_DIR && $APP_DIR/venv/bin/python train_model.py
 
 echo "=== Configuring nginx ==="
 cp $APP_DIR/deploy/nginx.conf /etc/nginx/sites-available/garuda-chatbot
