@@ -1,209 +1,187 @@
-# Predefined Q&A for common Garuda Food product questions.
-# Each entry has:
-#   "keywords": list of words — if enough match the user's question, this entry is used
-#   "answer": the response to return immediately (no API call)
-
 QA_DATA = [
+    # Greetings
     {
-        "keywords": ["product", "snack", "what", "have", "sell", "list", "brand", "jual", "apa saja"],
+        "keywords": ["halo", "hai", "hello", "hi", "hey", "selamat", "pagi", "siang", "sore", "malam"],
+        "answer": "Halo kak 👋 Lagi cari snack apa hari ini? 😄 Manis atau gurih?",
+    },
+    # Thanks / closing
+    {
+        "keywords": ["makasih", "terima kasih", "thank", "thanks", "thx"],
+        "answer": "Sama-sama 😊 Selamat ngemil ya! 🍫🥜 Kalau butuh rekomendasi lagi, tinggal chat aja 👍",
+    },
+    # Vague / unclear
+    {
+        "keywords": ["enak", "rekomen", "suggest", "saran", "bagus", "ada yang"],
+        "answer": "Hehe banyak 😄 Kamu lagi pengen yang:\n👉 manis\n👉 gurih\n👉 atau ringan buat ngemil?",
+    },
+    # Sweet recommendation
+    {
+        "keywords": ["manis", "sweet", "coklat", "chocolate"],
         "answer": (
-            "Garuda Food has a wide range of snack products! Here are our key brands:\n\n"
-            "🥜 Kacang Garuda – Roasted peanuts in original, spicy, and coated flavors\n"
-            "🍫 Chocolatos – Chocolate wafer sticks, loved by kids and adults\n"
-            "🍪 Gery – Biscuits, wafers, and cookies in many varieties\n"
-            "🍮 Okky – Jelly snacks and drinks in fun fruity flavors\n"
-            "🥔 Leo – Chips, crackers, and savory snacks\n"
-            "🍫 Beng-Beng – Chocolate wafer bars with caramel filling\n"
-            "🥛 Clevo – Milk-based snack products\n\n"
-            "Would you like to know more about any specific product?"
+            "Ada dong 😊 Kalau suka coklat, kamu bisa coba:\n"
+            "🍫 Beng-Beng – wafer + caramel + coklat\n"
+            "🍫 Chocolatos – wafer stick coklat, enak banget buat ngemil\n\n"
+            "Mau yang manis ringan atau yang lebih kenyang?"
         ),
     },
+    # Light snack
     {
-        "keywords": ["kacang", "peanut", "garuda peanut", "kacang garuda"],
+        "keywords": ["ringan", "light", "tipis", "kecil"],
         "answer": (
-            "🥜 Kacang Garuda is one of our most iconic products!\n\n"
-            "Available flavors:\n"
-            "• Original – Classic roasted peanuts, lightly salted\n"
-            "• Spicy (Pedas) – For those who love a kick\n"
-            "• Coated (Kulit) – Crispy shell-on peanuts\n"
-            "• Rendang – Savory rendang-spiced peanuts\n\n"
-            "Sizes: Small (100g), Medium (250g), Large (500g)\n"
-            "High in protein and a great snack for any time of day!"
+            "Oke 👍 Kalau yang ringan aku saranin:\n"
+            "🍫 Chocolatos – teksturnya ringan & crunchy\n\n"
+            "Ada varian:\n• Milk\n• Dark\n• Matcha\n\n"
+            "Kamu biasanya suka rasa apa? 😄"
         ),
     },
+    # Savory
     {
-        "keywords": ["chocolatos", "chocolate wafer", "wafer stick", "coklat"],
+        "keywords": ["gurih", "asin", "savory", "salty", "pedas", "spicy", "crispy"],
         "answer": (
-            "🍫 Chocolatos is our popular chocolate wafer stick snack!\n\n"
-            "Variants:\n"
-            "• Chocolatos Dark – Rich dark chocolate flavor\n"
-            "• Chocolatos Milk – Creamy milk chocolate\n"
-            "• Chocolatos White – Smooth white chocolate\n"
-            "• Chocolatos Matcha – Green tea chocolate flavor\n\n"
-            "Each pack contains crispy wafer sticks coated in delicious chocolate. "
-            "Perfect as a snack or dessert topping. Available in single packs and multipacks."
+            "Siap 👍 Ini rekomendasi gurih:\n"
+            "🥜 Kacang Garuda – classic & protein tinggi\n"
+            "🥔 Leo Chips – crispy, banyak rasa (BBQ, cheese, spicy)\n\n"
+            "Lagi pengen yang pedas atau biasa?"
         ),
     },
+    # Beng-Beng
     {
-        "keywords": ["gery", "biscuit", "biskuit", "cookie", "wafer"],
+        "keywords": ["beng-beng", "beng beng", "bengbeng"],
         "answer": (
-            "🍪 Gery is our biscuit and wafer brand with many delicious options!\n\n"
-            "Popular Gery products:\n"
-            "• Gery Malkist – Crispy layered crackers\n"
-            "• Gery Saluut – Chocolate-filled wafer rolls\n"
-            "• Gery Pasta – Wafers with creamy filling\n"
-            "• Gery Cheese – Savory cheese-flavored biscuits\n\n"
-            "Gery products are great for snacking, lunchboxes, or teatime!"
+            "ENAK BANGET 😆🔥\n"
+            "🍫 Beng-Beng:\n• ada caramel\n• crunchy wafer\n• coklatnya tebel\n\n"
+            "Best seller sih ini 👍"
         ),
     },
+    # Chocolatos
     {
-        "keywords": ["okky", "jelly", "drink", "minuman", "agar"],
+        "keywords": ["chocolatos", "wafer stick"],
         "answer": (
-            "🍮 Okky is our fun jelly snack and drink brand!\n\n"
-            "Okky products:\n"
-            "• Okky Jelly – Cup jellies in strawberry, grape, lychee, and orange\n"
-            "• Okky Jelly Drink – Drinkable jelly in bottles\n"
-            "• Okky Drink – Fruit-flavored drinks\n\n"
-            "Okky is a favorite among kids and comes in colorful, fun packaging. "
-            "Low calorie and refreshing!"
+            "🍫 Chocolatos itu favorit banyak orang!\n\n"
+            "Varian:\n• Milk – creamy\n• Dark – rich coklat\n• Matcha – unik & enak\n\n"
+            "Harga sekitar Rp2.000–5.000 per pack. Mau yang rasa apa? 😄"
         ),
     },
+    # Kacang Garuda
     {
-        "keywords": ["leo", "chip", "crisp", "keripik", "cracker", "savory"],
+        "keywords": ["kacang", "peanut", "kacang garuda"],
         "answer": (
-            "🥔 Leo is our savory chips and crackers brand!\n\n"
-            "Leo variants:\n"
-            "• Leo Potato Chips – Classic crispy potato chips\n"
-            "• Leo Cassava Chips – Crunchy cassava-based snacks\n"
-            "• Leo Crackers – Light and crispy snack crackers\n\n"
-            "Available in flavors: Original, BBQ, Spicy, Cheese, and Seaweed. "
-            "Perfect for snacking and sharing!"
+            "🥜 Kacang Garuda itu klasik banget!\n\n"
+            "Varian:\n• Original – gurih ringan\n• Pedas – buat yang suka pedes\n• Rendang – savory banget\n\n"
+            "Tinggi protein, cocok buat ngemil kapan aja 💪"
         ),
     },
+    # Leo chips
     {
-        "keywords": ["beng-beng", "beng beng", "caramel", "wafer bar", "chocolate bar"],
+        "keywords": ["leo", "chips", "keripik", "cracker"],
         "answer": (
-            "🍫 Beng-Beng is our signature chocolate wafer bar!\n\n"
-            "Features:\n"
-            "• Crispy wafer layers\n"
-            "• Smooth caramel filling\n"
-            "• Coated in rich milk chocolate\n\n"
-            "Variants:\n"
-            "• Beng-Beng Original\n"
-            "• Beng-Beng Maxx (bigger size)\n"
-            "• Beng-Beng Share It (multipack)\n\n"
-            "A satisfying sweet treat loved across Indonesia!"
+            "🥔 Leo Chips itu crunchy & addictive!\n\n"
+            "Rasa:\n• BBQ\n• Cheese\n• Spicy\n• Original\n\n"
+            "Cocok buat nonton atau santai 😄 Suka yang rasa apa?"
         ),
     },
+    # Gery
     {
-        "keywords": ["clevo", "milk", "susu", "dairy"],
+        "keywords": ["gery", "biskuit", "biscuit", "cookie", "wafer"],
         "answer": (
-            "🥛 Clevo is our milk-based snack product line!\n\n"
-            "Clevo products include milk-flavored snacks and drinks designed "
-            "for nutrition and taste. Great for kids as part of a balanced diet. "
-            "Available in various flavors including plain, strawberry, and chocolate."
+            "🍪 Gery punya banyak pilihan!\n\n"
+            "• Gery Malkist – crispy layered\n"
+            "• Gery Saluut – wafer roll coklat\n"
+            "• Gery Cheese – gurih keju\n\n"
+            "Cocok buat cemilan atau bekal 😊"
         ),
     },
+    # Okky
     {
-        "keywords": ["ingredient", "bahan", "contain", "made of", "terbuat", "komposisi"],
+        "keywords": ["okky", "jelly", "agar"],
         "answer": (
-            "Our products use quality ingredients. Here's a general overview:\n\n"
-            "🥜 Kacang Garuda – Peanuts, salt, vegetable oil, seasoning\n"
-            "🍫 Chocolatos – Wheat flour, cocoa, sugar, vegetable fat, milk powder\n"
-            "🍪 Gery – Wheat flour, sugar, vegetable oil, flavorings\n"
-            "🍮 Okky Jelly – Water, sugar, carrageenan, fruit flavoring\n"
-            "🥔 Leo Chips – Potato/cassava, vegetable oil, seasoning\n"
-            "🍫 Beng-Beng – Wheat flour, sugar, cocoa, caramel, milk\n\n"
-            "For detailed ingredient lists and allergen info, please check the product packaging "
-            "or visit the official Garuda Food website."
+            "🍮 Okky Jelly itu seger & rendah kalori!\n\n"
+            "Rasa: strawberry, grape, lychee, orange\n"
+            "Ada juga Okky Jelly Drink yang bisa diminum langsung 🥤\n\n"
+            "Cocok banget buat anak-anak 😄"
         ),
     },
+    # Clevo
     {
-        "keywords": ["nutrition", "calorie", "kalori", "gizi", "healthy", "sehat", "protein", "fat", "lemak"],
+        "keywords": ["clevo", "susu", "milk", "dairy"],
         "answer": (
-            "Here's a general nutritional overview of our popular snacks (per serving):\n\n"
-            "🥜 Kacang Garuda (30g) – ~170 kcal, 7g protein, 14g fat\n"
-            "🍫 Chocolatos (1 stick) – ~45 kcal, 0.5g protein, 2g fat\n"
-            "🍪 Gery Malkist (4 pcs) – ~90 kcal, 1.5g protein, 3.5g fat\n"
-            "🍮 Okky Jelly (1 cup) – ~80 kcal, 0g protein, 0g fat\n"
-            "🥔 Leo Chips (25g) – ~130 kcal, 1g protein, 8g fat\n"
-            "🍫 Beng-Beng (1 bar) – ~130 kcal, 1.5g protein, 6g fat\n\n"
-            "For exact nutritional information, check the label on each product."
+            "🥛 Clevo itu snack berbasis susu dari Garuda Food!\n\n"
+            "Rasa: plain, strawberry, coklat\n"
+            "Bagus buat anak-anak sebagai camilan bergizi 😊"
         ),
     },
+    # Price
     {
-        "keywords": ["buy", "where", "beli", "toko", "store", "shop", "alfamart", "indomaret", "online", "shopee", "tokopedia"],
+        "keywords": ["harga", "price", "berapa", "cost", "murah"],
         "answer": (
-            "🛒 You can find Garuda Food products at:\n\n"
-            "Physical stores:\n"
-            "• Indomaret and Alfamart (nationwide)\n"
-            "• Hypermart, Transmart, Carrefour\n"
-            "• Local warungs and minimarkets\n\n"
-            "Online:\n"
-            "• Tokopedia – search 'Garuda Food'\n"
-            "• Shopee – search 'Garuda Food'\n"
-            "• Lazada\n"
-            "• Official Garuda Food online store\n\n"
-            "Products are available across Indonesia and in select international markets."
+            "Harga produk Garuda Food:\n\n"
+            "🥜 Kacang Garuda – Rp5.000–35.000\n"
+            "🍫 Chocolatos – Rp2.000–5.000\n"
+            "🍪 Gery – Rp3.000–15.000\n"
+            "🍮 Okky Jelly – Rp1.500–5.000\n"
+            "🥔 Leo Chips – Rp5.000–20.000\n"
+            "🍫 Beng-Beng – Rp3.000–8.000\n\n"
+            "Tergantung beli di mana ya (Indomaret, Alfamart, atau online) 😊"
         ),
     },
+    # Where to buy
     {
-        "keywords": ["sweet", "manis", "recommend", "rekomendasi", "suggestion", "saran", "favorite", "favorit", "best"],
+        "keywords": ["beli", "where", "toko", "store", "alfamart", "indomaret", "shopee", "tokopedia", "online"],
         "answer": (
-            "Looking for a sweet Garuda Food snack? Here are our top picks:\n\n"
-            "🍫 Beng-Beng – Chocolate wafer bar with caramel, a classic!\n"
-            "🍫 Chocolatos – Chocolate wafer sticks, great for munching\n"
-            "🍪 Gery Saluut – Crispy wafer rolls with chocolate filling\n"
-            "🍮 Okky Jelly – Light and fruity jelly cups\n\n"
-            "All are available in most stores across Indonesia. Would you like more details on any of these?"
+            "🛒 Bisa beli di:\n\n"
+            "Offline: Indomaret, Alfamart, Hypermart, warung terdekat\n"
+            "Online: Tokopedia, Shopee, Lazada – cari 'Garuda Food'\n\n"
+            "Tersedia di seluruh Indonesia 🇮🇩"
         ),
     },
+    # Ingredients
     {
-        "keywords": ["savory", "asin", "salty", "gurih", "spicy", "pedas"],
+        "keywords": ["bahan", "ingredient", "contain", "terbuat", "komposisi", "alergi", "allergen"],
         "answer": (
-            "Love savory snacks? Here are our best picks:\n\n"
-            "🥜 Kacang Garuda Pedas – Spicy roasted peanuts\n"
-            "🥔 Leo Chips – Potato chips in BBQ, Cheese, and Spicy flavors\n"
-            "🍪 Gery Cheese Biscuits – Savory cheese-flavored crackers\n"
-            "🥔 Leo Cassava Chips – Crunchy and lightly seasoned\n\n"
-            "These are perfect for snacking, watching movies, or gatherings!"
+            "Bahan utama produk kami:\n\n"
+            "🥜 Kacang Garuda – kacang, garam, minyak nabati\n"
+            "🍫 Chocolatos – tepung, kakao, gula, susu\n"
+            "🍪 Gery – tepung, gula, minyak nabati\n"
+            "🍮 Okky – air, gula, karagenan, perisa buah\n"
+            "🥔 Leo – kentang/singkong, minyak, bumbu\n"
+            "🍫 Beng-Beng – tepung, gula, kakao, karamel, susu\n\n"
+            "Untuk info lengkap, cek kemasan produk ya 😊"
         ),
     },
+    # Halal
     {
-        "keywords": ["price", "harga", "cost", "how much", "berapa"],
+        "keywords": ["halal", "mui", "sertifikat", "certif"],
+        "answer": "✅ Semua produk Garuda Food sudah bersertifikat Halal MUI ya kak! Logo halal ada di setiap kemasan 😊",
+    },
+    # Nutrition
+    {
+        "keywords": ["kalori", "nutrition", "gizi", "sehat", "protein", "lemak", "fat", "healthy"],
         "answer": (
-            "Here's a rough price guide for Garuda Food products in Indonesia:\n\n"
-            "🥜 Kacang Garuda – Rp 5,000 – Rp 35,000 (depending on size)\n"
-            "🍫 Chocolatos – Rp 2,000 – Rp 5,000 per pack\n"
-            "🍪 Gery – Rp 3,000 – Rp 15,000\n"
-            "🍮 Okky Jelly – Rp 1,500 – Rp 5,000\n"
-            "🥔 Leo Chips – Rp 5,000 – Rp 20,000\n"
-            "🍫 Beng-Beng – Rp 3,000 – Rp 8,000\n\n"
-            "Prices may vary by store and region. Check Tokopedia or Shopee for the latest prices."
+            "Info gizi per sajian:\n\n"
+            "🥜 Kacang Garuda (30g) – ~170 kkal, 7g protein\n"
+            "🍫 Chocolatos (1 stick) – ~45 kkal\n"
+            "🍮 Okky Jelly (1 cup) – ~80 kkal, 0g lemak\n"
+            "🥔 Leo Chips (25g) – ~130 kkal\n"
+            "🍫 Beng-Beng (1 bar) – ~130 kkal\n\n"
+            "Untuk info lengkap cek label kemasan ya 😊"
         ),
     },
+    # All products
     {
-        "keywords": ["halal", "certif", "sertifikat", "mui"],
+        "keywords": ["produk", "product", "semua", "list", "apa saja", "brand", "jual"],
         "answer": (
-            "✅ Yes! Garuda Food products are Halal certified by MUI (Majelis Ulama Indonesia).\n\n"
-            "All our snack products comply with halal standards in ingredients, "
-            "processing, and packaging. You can find the MUI Halal logo on our product packaging."
-        ),
-    },
-    {
-        "keywords": ["hello", "hi", "halo", "hai", "hey", "good morning", "good afternoon", "selamat", "pagi", "siang", "sore"],
-        "answer": (
-            "Hello! 👋 Welcome to the Garuda Food Snack Assistant!\n\n"
-            "I'm here to help you with anything about our delicious snack products — "
-            "from ingredients and nutrition to where to buy them.\n\n"
-            "What would you like to know about our snacks today? 🥜🍫🍪"
-        ),
-    },
-    {
-        "keywords": ["thank", "thanks", "terima kasih", "makasih", "thx"],
-        "answer": (
-            "You're welcome! 😊 Happy snacking with Garuda Food!\n\n"
-            "Feel free to ask anytime if you have more questions about our products. 🥜🍫"
+            "Ini produk snack Garuda Food:\n\n"
+            "🥜 Kacang Garuda – kacang panggang\n"
+            "🍫 Chocolatos – wafer stick coklat\n"
+            "🍪 Gery – biskuit & wafer\n"
+            "🍮 Okky – jelly & minuman\n"
+            "🥔 Leo – chips & crackers\n"
+            "🍫 Beng-Beng – wafer bar coklat caramel\n"
+            "🥛 Clevo – snack berbasis susu\n\n"
+            "Mau tau lebih lanjut yang mana? 😄"
         ),
     },
 ]
+
+# Out-of-scope fallback
+OUT_OF_SCOPE = "Maaf ya kak 😊 Untuk saat ini kami hanya menyediakan produk snack dari Garuda Food\nKalau mau, aku bisa rekomendasiin snack yang cocok buat kamu 👌"
