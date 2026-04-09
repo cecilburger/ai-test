@@ -103,28 +103,12 @@
       --green-key: 1;
     }
 
-    /* State animations */
-    .character-wrap.idle .character-img {
-      animation: breathe 4s ease-in-out infinite;
-    }
-
-    .character-wrap.thinking .character-img {
-      animation: think 1.2s ease-in-out infinite;
-    }
-
+    /* State animations — photo stays still, only canvas animates */
+    .character-wrap.idle .character-img,
+    .character-wrap.thinking .character-img,
     .character-wrap.talking .character-img {
-      animation: breathe 4s ease-in-out infinite;
-    }
-
-    @keyframes breathe {
-      0%, 100% { transform: translateY(0) scale(1); }
-      50%       { transform: translateY(-5px) scale(1.006); }
-    }
-
-    @keyframes think {
-      0%, 100% { transform: translateY(0) rotate(0deg); }
-      25%       { transform: translateY(-4px) rotate(-1deg); }
-      75%       { transform: translateY(-2px) rotate(0.8deg); }
+      animation: none;
+      transform: none;
     }
 
     /* Canvas overlay for eye blink + mouth */
@@ -460,9 +444,9 @@
   // Face occupies roughly y:28%-65% of full image → in panel: y:62%-100%+
   // So we map face features relative to what's visible in the panel
   const FACE = {
-    eyeL:  { x: 0.415, y: 0.615, w: 0.085, h: 0.032 },
-    eyeR:  { x: 0.585, y: 0.610, w: 0.085, h: 0.032 },
-    mouth: { x: 0.500, y: 0.760, w: 0.145, h: 0.026 },
+    eyeL:  { x: 0.415, y: 0.575, w: 0.085, h: 0.032 },
+    eyeR:  { x: 0.585, y: 0.570, w: 0.085, h: 0.032 },
+    mouth: { x: 0.500, y: 0.710, w: 0.145, h: 0.026 },
   };
 
   let blinkState   = 0;    // 0=open, 1=closing, 2=closed, 3=opening
