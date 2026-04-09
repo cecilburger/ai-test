@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Garuda Food Chatbot</title>
+  <title>Garuda Food Live</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
@@ -19,90 +19,148 @@
       overflow: hidden;
     }
 
-    /* Animated background */
     body::before {
       content: '';
       position: fixed;
       inset: 0;
       background:
-        radial-gradient(ellipse at 20% 50%, rgba(214, 43, 39, 0.15) 0%, transparent 60%),
-        radial-gradient(ellipse at 80% 20%, rgba(255, 100, 0, 0.1) 0%, transparent 50%),
-        radial-gradient(ellipse at 60% 80%, rgba(214, 43, 39, 0.08) 0%, transparent 50%);
+        radial-gradient(ellipse at 20% 50%, rgba(214,43,39,0.15) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 20%, rgba(255,100,0,0.10) 0%, transparent 50%),
+        radial-gradient(ellipse at 60% 80%, rgba(214,43,39,0.08) 0%, transparent 50%);
       pointer-events: none;
       z-index: 0;
     }
 
-    .chat-container {
+    .app {
       position: relative;
       z-index: 1;
       width: 100%;
-      max-width: 480px;
+      max-width: 420px;
       height: 100vh;
-      max-height: 860px;
-      background: rgba(15, 15, 20, 0.95);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 24px;
+      max-height: 900px;
       display: flex;
       flex-direction: column;
+      border-radius: 24px;
       overflow: hidden;
-      box-shadow: 0 0 60px rgba(214, 43, 39, 0.2), 0 0 120px rgba(0,0,0,0.8);
+      box-shadow: 0 0 60px rgba(214,43,39,0.2), 0 0 120px rgba(0,0,0,0.8);
+      border: 1px solid rgba(255,255,255,0.07);
     }
 
-    /* Header */
-    .chat-header {
-      padding: 16px 20px;
-      background: rgba(20, 20, 28, 0.9);
-      border-bottom: 1px solid rgba(255,255,255,0.06);
+    /* ── CHARACTER PANEL ── */
+    .character-panel {
+      position: relative;
+      flex: 0 0 42%;
+      background: linear-gradient(180deg, #0d0d14 0%, #12121a 100%);
       display: flex;
-      align-items: center;
-      gap: 12px;
-      backdrop-filter: blur(10px);
-    }
-
-    .logo {
-      width: 42px;
-      height: 42px;
-      border-radius: 12px;
-      background: linear-gradient(135deg, #d62b27, #ff6b35);
-      display: flex;
-      align-items: center;
+      align-items: flex-end;
       justify-content: center;
-      font-weight: 700;
-      color: white;
-      font-size: 18px;
-      flex-shrink: 0;
-      box-shadow: 0 0 16px rgba(214, 43, 39, 0.5);
+      overflow: hidden;
     }
 
-    .header-info { flex: 1; }
-
-    .header-info h1 {
-      font-size: 15px;
-      font-weight: 600;
-      color: #fff;
-      letter-spacing: 0.2px;
+    /* subtle grid bg */
+    .character-panel::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(214,43,39,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(214,43,39,0.04) 1px, transparent 1px);
+      background-size: 32px 32px;
     }
 
-    .header-info .status {
-      font-size: 11px;
-      color: #4ade80;
+    /* glow under character */
+    .character-panel::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 200px;
+      height: 80px;
+      background: radial-gradient(ellipse, rgba(214,43,39,0.35) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .character-wrap {
+      position: relative;
+      z-index: 2;
+      width: 260px;
+      height: 100%;
       display: flex;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    .character-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: top center;
+      /* Chroma key: remove green background */
+      mix-blend-mode: normal;
+      filter: drop-shadow(0 8px 24px rgba(0,0,0,0.6));
+      /* CSS green screen removal */
+      --green-key: 1;
+    }
+
+    /* State animations */
+    .character-wrap.idle .character-img {
+      animation: breathe 4s ease-in-out infinite;
+    }
+
+    .character-wrap.thinking .character-img {
+      animation: think 1.2s ease-in-out infinite;
+    }
+
+    .character-wrap.talking .character-img {
+      animation: talk 0.18s ease-in-out infinite alternate;
+    }
+
+    @keyframes breathe {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50%       { transform: translateY(-6px) scale(1.008); }
+    }
+
+    @keyframes think {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      25%       { transform: translateY(-4px) rotate(-1.5deg); }
+      75%       { transform: translateY(-2px) rotate(1deg); }
+    }
+
+    @keyframes talk {
+      from { transform: translateY(0) scaleY(1); }
+      to   { transform: translateY(-3px) scaleY(1.012); }
+    }
+
+    /* State label */
+    .state-badge {
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      transition: all 0.3s;
+      white-space: nowrap;
+    }
+
+    .state-badge.idle     { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.4); }
+    .state-badge.thinking { background: rgba(255,180,0,0.15);   color: #fbbf24; }
+    .state-badge.talking  { background: rgba(74,222,128,0.15);  color: #4ade80; }
+
+    /* Header overlay on character panel */
+    .live-header {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      z-index: 10;
+      display: flex;
+      gap: 8px;
       align-items: center;
-      gap: 4px;
-      margin-top: 2px;
-    }
-
-    .status-dot {
-      width: 6px;
-      height: 6px;
-      background: #4ade80;
-      border-radius: 50%;
-      animation: pulse-green 2s infinite;
-    }
-
-    @keyframes pulse-green {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.4; }
     }
 
     .live-badge {
@@ -114,276 +172,246 @@
       border-radius: 20px;
       letter-spacing: 1px;
       animation: pulse-red 1.5s infinite;
-      box-shadow: 0 0 10px rgba(214, 43, 39, 0.6);
+      box-shadow: 0 0 10px rgba(214,43,39,0.6);
     }
 
     @keyframes pulse-red {
-      0%, 100% { box-shadow: 0 0 10px rgba(214, 43, 39, 0.6); }
-      50% { box-shadow: 0 0 20px rgba(214, 43, 39, 0.9); }
+      0%, 100% { box-shadow: 0 0 10px rgba(214,43,39,0.6); }
+      50%       { box-shadow: 0 0 20px rgba(214,43,39,0.9); }
     }
 
     .voice-toggle {
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
       cursor: pointer;
-      width: 36px;
-      height: 36px;
+      width: 32px;
+      height: 32px;
       border-radius: 10px;
-      font-size: 16px;
+      font-size: 14px;
       display: flex;
       align-items: center;
       justify-content: center;
       transition: all 0.2s;
       color: white;
     }
-    .voice-toggle:hover { background: rgba(255,255,255,0.12); }
+    .voice-toggle:hover { background: rgba(255,255,255,0.15); }
     .voice-toggle.muted { opacity: 0.35; }
 
-    /* Messages */
+    /* ── CHAT PANEL ── */
+    .chat-panel {
+      flex: 1;
+      background: rgba(12,12,18,0.97);
+      border-top: 1px solid rgba(255,255,255,0.06);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .chat-header {
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .logo {
+      width: 32px;
+      height: 32px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, #d62b27, #ff6b35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: white;
+      font-size: 14px;
+      flex-shrink: 0;
+      box-shadow: 0 0 12px rgba(214,43,39,0.4);
+    }
+
+    .header-info h1 { font-size: 13px; font-weight: 600; color: #fff; }
+    .header-info .status {
+      font-size: 10px; color: #4ade80;
+      display: flex; align-items: center; gap: 4px; margin-top: 1px;
+    }
+    .status-dot {
+      width: 5px; height: 5px;
+      background: #4ade80; border-radius: 50%;
+      animation: pulse-green 2s infinite;
+    }
+    @keyframes pulse-green {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.4; }
+    }
+
     .messages {
       flex: 1;
       overflow-y: auto;
-      padding: 20px 16px;
+      padding: 12px 14px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
       scrollbar-width: thin;
-      scrollbar-color: rgba(255,255,255,0.1) transparent;
+      scrollbar-color: rgba(255,255,255,0.08) transparent;
     }
+    .messages::-webkit-scrollbar { width: 3px; }
+    .messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 3px; }
 
-    .messages::-webkit-scrollbar { width: 4px; }
-    .messages::-webkit-scrollbar-track { background: transparent; }
-    .messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
-
-    /* Welcome */
-    .welcome {
-      text-align: center;
-      padding: 24px 16px 8px;
-    }
-
-    .welcome-emoji {
-      font-size: 40px;
-      margin-bottom: 10px;
-      display: block;
-    }
-
-    .welcome h2 {
-      font-size: 16px;
-      font-weight: 600;
-      color: #fff;
-      margin-bottom: 4px;
-    }
-
-    .welcome p {
-      font-size: 12px;
-      color: rgba(255,255,255,0.4);
-      margin-bottom: 16px;
-    }
+    .welcome { text-align: center; padding: 8px 0 4px; }
+    .welcome p { font-size: 11px; color: rgba(255,255,255,0.3); margin-bottom: 10px; }
 
     .suggestions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      justify-content: center;
+      display: flex; flex-wrap: wrap; gap: 6px; justify-content: center;
     }
-
     .suggestion-btn {
-      background: rgba(214, 43, 39, 0.12);
-      border: 1px solid rgba(214, 43, 39, 0.3);
-      color: rgba(255,255,255,0.8);
-      padding: 7px 14px;
+      background: rgba(214,43,39,0.1);
+      border: 1px solid rgba(214,43,39,0.25);
+      color: rgba(255,255,255,0.7);
+      padding: 5px 12px;
       border-radius: 20px;
-      font-size: 12px;
+      font-size: 11px;
       font-family: inherit;
       cursor: pointer;
       transition: all 0.2s;
     }
-
     .suggestion-btn:hover {
-      background: rgba(214, 43, 39, 0.3);
-      border-color: rgba(214, 43, 39, 0.6);
+      background: rgba(214,43,39,0.25);
       color: #fff;
       transform: translateY(-1px);
     }
 
-    /* Messages */
     .message {
       display: flex;
       align-items: flex-end;
-      gap: 8px;
-      animation: fadeUp 0.25s ease;
+      gap: 7px;
+      animation: fadeUp 0.2s ease;
     }
-
     @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(8px); }
+      from { opacity: 0; transform: translateY(6px); }
       to   { opacity: 1; transform: translateY(0); }
     }
-
     .message.user { flex-direction: row-reverse; }
 
     .avatar {
-      width: 30px;
-      height: 30px;
-      border-radius: 10px;
-      flex-shrink: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 12px;
-      font-weight: 700;
-      color: white;
+      width: 26px; height: 26px;
+      border-radius: 8px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; color: white;
     }
-
-    .message.bot .avatar {
-      background: linear-gradient(135deg, #d62b27, #ff6b35);
-      box-shadow: 0 0 10px rgba(214, 43, 39, 0.4);
-    }
-
-    .message.user .avatar {
-      background: rgba(255,255,255,0.1);
-      border: 1px solid rgba(255,255,255,0.15);
-    }
+    .message.bot .avatar  { background: linear-gradient(135deg,#d62b27,#ff6b35); box-shadow: 0 0 8px rgba(214,43,39,0.35); }
+    .message.user .avatar { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); }
 
     .bubble {
-      max-width: 78%;
-      padding: 10px 14px;
-      border-radius: 16px;
-      font-size: 13.5px;
-      line-height: 1.6;
+      max-width: 80%;
+      padding: 8px 12px;
+      border-radius: 14px;
+      font-size: 13px;
+      line-height: 1.55;
       white-space: pre-wrap;
       word-break: break-word;
     }
-
-    .message.bot .bubble {
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.08);
-      color: rgba(255,255,255,0.9);
-      border-bottom-left-radius: 4px;
+    .message.bot .bubble  {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.07);
+      color: rgba(255,255,255,0.88);
+      border-bottom-left-radius: 3px;
     }
-
     .message.user .bubble {
-      background: linear-gradient(135deg, #d62b27, #e83a36);
+      background: linear-gradient(135deg,#d62b27,#e83a36);
       color: white;
-      border-bottom-right-radius: 4px;
-      box-shadow: 0 4px 16px rgba(214, 43, 39, 0.35);
+      border-bottom-right-radius: 3px;
+      box-shadow: 0 3px 12px rgba(214,43,39,0.3);
     }
 
-    /* Typing */
-    .typing-indicator {
-      display: flex;
-      gap: 4px;
-      padding: 2px 0;
-      align-items: center;
-    }
-
+    .typing-indicator { display: flex; gap: 4px; padding: 2px 0; align-items: center; }
     .typing-indicator span {
-      width: 7px;
-      height: 7px;
-      background: rgba(255,255,255,0.4);
-      border-radius: 50%;
+      width: 6px; height: 6px;
+      background: rgba(255,255,255,0.35); border-radius: 50%;
       animation: bounce 1.2s infinite;
     }
-
     .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
     .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
-
     @keyframes bounce {
-      0%, 60%, 100% { transform: translateY(0); }
-      30% { transform: translateY(-5px); }
+      0%,60%,100% { transform: translateY(0); }
+      30%          { transform: translateY(-5px); }
     }
 
-    /* Input */
     .input-area {
-      padding: 12px 16px 16px;
-      background: rgba(20, 20, 28, 0.9);
-      border-top: 1px solid rgba(255,255,255,0.06);
-      display: flex;
-      gap: 10px;
-      align-items: flex-end;
-      backdrop-filter: blur(10px);
+      padding: 10px 14px 14px;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      display: flex; gap: 8px; align-items: flex-end;
     }
-
     .input-wrap {
       flex: 1;
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 16px;
-      display: flex;
-      align-items: flex-end;
-      padding: 10px 14px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 14px;
+      display: flex; align-items: flex-end;
+      padding: 8px 12px;
       transition: border-color 0.2s;
     }
-
     .input-wrap:focus-within {
-      border-color: rgba(214, 43, 39, 0.5);
-      box-shadow: 0 0 0 3px rgba(214, 43, 39, 0.08);
+      border-color: rgba(214,43,39,0.45);
+      box-shadow: 0 0 0 3px rgba(214,43,39,0.07);
     }
-
     .input-wrap textarea {
-      flex: 1;
-      background: none;
-      border: none;
-      outline: none;
-      color: #fff;
-      font-size: 14px;
-      font-family: inherit;
-      resize: none;
-      line-height: 1.5;
-      max-height: 100px;
+      flex: 1; background: none; border: none; outline: none;
+      color: #fff; font-size: 13px; font-family: inherit;
+      resize: none; line-height: 1.5; max-height: 80px;
     }
-
-    .input-wrap textarea::placeholder { color: rgba(255,255,255,0.25); }
+    .input-wrap textarea::placeholder { color: rgba(255,255,255,0.2); }
 
     .send-btn {
-      width: 42px;
-      height: 42px;
-      border-radius: 13px;
-      background: linear-gradient(135deg, #d62b27, #ff4444);
-      border: none;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      transition: all 0.2s;
-      box-shadow: 0 4px 14px rgba(214, 43, 39, 0.4);
+      width: 38px; height: 38px;
+      border-radius: 11px;
+      background: linear-gradient(135deg,#d62b27,#ff4444);
+      border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; transition: all 0.2s;
+      box-shadow: 0 3px 12px rgba(214,43,39,0.4);
     }
-
-    .send-btn:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 6px 20px rgba(214, 43, 39, 0.55);
-    }
-
-    .send-btn:disabled {
-      background: rgba(255,255,255,0.08);
-      box-shadow: none;
-      cursor: not-allowed;
-      transform: none;
-    }
-
-    .send-btn svg { width: 18px; height: 18px; fill: white; }
+    .send-btn:hover { transform: translateY(-1px); box-shadow: 0 5px 18px rgba(214,43,39,0.55); }
+    .send-btn:disabled { background: rgba(255,255,255,0.07); box-shadow: none; cursor: not-allowed; transform: none; }
+    .send-btn svg { width: 16px; height: 16px; fill: white; }
   </style>
 </head>
 <body>
-  <div class="chat-container">
-    <div class="chat-header">
-      <div class="logo">G</div>
-      <div class="header-info">
-        <h1>Garuda Food Assistant</h1>
-        <div class="status">
-          <span class="status-dot"></span>
-          Online sekarang
-        </div>
-      </div>
+<div class="app">
+
+  <!-- CHARACTER PANEL -->
+  <div class="character-panel">
+    <div class="live-header">
       <span class="live-badge">LIVE</span>
       <button class="voice-toggle" id="voiceBtn" onclick="toggleVoice()" title="Toggle voice">🔊</button>
     </div>
 
+    <div class="state-badge idle" id="stateBadge">😊 Siap</div>
+
+    <div class="character-wrap idle" id="characterWrap">
+      <img
+        id="characterImg"
+        class="character-img"
+        src="/static/character.png"
+        alt="Garuda Food Assistant"
+        style="image-rendering: auto;"
+      />
+    </div>
+  </div>
+
+  <!-- CHAT PANEL -->
+  <div class="chat-panel">
+    <div class="chat-header">
+      <div class="logo">G</div>
+      <div class="header-info">
+        <h1>Garuda Food Assistant</h1>
+        <div class="status"><span class="status-dot"></span>Online sekarang</div>
+      </div>
+    </div>
+
     <div class="messages" id="messages">
       <div class="welcome">
-        <span class="welcome-emoji">🥜🍫</span>
-        <h2>Halo! Selamat datang</h2>
-        <p>Tanya apa aja soal snack GarudaFood ya!</p>
+        <p>Tanya apa aja soal snack GarudaFood ya! 🥜🍫</p>
         <div class="suggestions">
           <button class="suggestion-btn" onclick="sendSuggestion(this)">Snack apa aja?</button>
           <button class="suggestion-btn" onclick="sendSuggestion(this)">Kacang Garuda</button>
@@ -408,228 +436,215 @@
       </button>
     </div>
   </div>
+</div>
 
-  <script>
-    // ── Voice (ElevenLabs TTS) ───────────────────────────────────────────
-    let voiceEnabled = true;
-    let currentAudio = null;
-    let isSpeaking = false;
-    const messageQueue = []; // { username, question, answer }
+<script>
+  // ── Character state ──────────────────────────────────────────────────
+  const characterWrap = document.getElementById("characterWrap");
+  const stateBadge    = document.getElementById("stateBadge");
 
-    function toggleVoice() {
-      voiceEnabled = !voiceEnabled;
-      const btn = document.getElementById("voiceBtn");
-      btn.textContent = voiceEnabled ? "🔊" : "🔇";
-      btn.classList.toggle("muted", !voiceEnabled);
-      if (!voiceEnabled && currentAudio) {
-        currentAudio.pause();
-        currentAudio = null;
-        isSpeaking = false;
-      }
-    }
+  function setCharacterState(state) {
+    characterWrap.className = `character-wrap ${state}`;
+    const labels = {
+      idle:     "😊 Siap",
+      thinking: "💭 Mikir...",
+      talking:  "🗣️ Ngomong",
+    };
+    stateBadge.textContent = labels[state] || "";
+    stateBadge.className = `state-badge ${state}`;
+  }
 
-    // Fetch TTS audio and return a promise that resolves when audio finishes
-    function fetchAndPlay(text) {
-      return new Promise(async (resolve) => {
-        if (!voiceEnabled) return resolve();
-        try {
-          const res = await fetch("/tts", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ text }),
-          });
-          if (!res.ok) return resolve();
-          const blob = await res.blob();
-          const url = URL.createObjectURL(blob);
-          if (currentAudio) currentAudio.pause();
-          currentAudio = new Audio(url);
-          currentAudio.onended = resolve;
-          currentAudio.onerror = resolve;
-          currentAudio.play();
-        } catch (_) { resolve(); }
-      });
-    }
+  // ── Voice (ElevenLabs TTS) ───────────────────────────────────────────
+  let voiceEnabled = true;
+  let currentAudio = null;
+  let isSpeaking   = false;
+  const messageQueue = [];
 
-    // Process queue one at a time — read comment first, then answer
-    async function processQueue() {
-      if (isSpeaking || messageQueue.length === 0) return;
-      isSpeaking = true;
-      const { username, question, answer } = messageQueue.shift();
-
-      // 1. Read the comment aloud: "[username] nanya: [question]"
-      const readComment = `${username} nanya: ${question}`;
-      await fetchAndPlay(readComment);
-
-      // 2. Then read the answer
-      await fetchAndPlay(answer);
-
+  function toggleVoice() {
+    voiceEnabled = !voiceEnabled;
+    const btn = document.getElementById("voiceBtn");
+    btn.textContent = voiceEnabled ? "🔊" : "🔇";
+    btn.classList.toggle("muted", !voiceEnabled);
+    if (!voiceEnabled && currentAudio) {
+      currentAudio.pause();
+      currentAudio = null;
       isSpeaking = false;
-      processQueue(); // next in queue
+      setCharacterState("idle");
     }
+  }
 
-    function enqueueSpeak(username, question, answer) {
-      if (!voiceEnabled) return;
-      messageQueue.push({ username, question, answer });
-      processQueue();
-    }
-    // ────────────────────────────────────────────────────────────────────
-
-    const messagesEl = document.getElementById("messages");
-    const inputEl    = document.getElementById("userInput");
-    const sendBtn    = document.getElementById("sendBtn");
-    let conversationHistory = [];
-    let isStreaming = false;
-    let pendingQueue = []; // queue of {text, username} waiting to be processed
-    let isProcessingChat = false;
-
-    function autoResize(el) {
-      el.style.height = "auto";
-      el.style.height = Math.min(el.scrollHeight, 100) + "px";
-    }
-
-    function handleKeyDown(e) {
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        sendMessage();
-      }
-    }
-
-    function sendSuggestion(btn) {
-      inputEl.value = btn.textContent;
-      sendMessage();
-    }
-
-    function scrollToBottom() {
-      messagesEl.scrollTop = messagesEl.scrollHeight;
-    }
-
-    function appendMessage(role, text, username) {
-      const div = document.createElement("div");
-      div.className = `message ${role}`;
-      const label = role === "bot" ? "G" : (username ? username[0].toUpperCase() : "U");
-      div.innerHTML = `
-        <div class="avatar">${label}</div>
-        <div class="bubble">${escapeHtml(text)}</div>
-      `;
-      messagesEl.appendChild(div);
-      scrollToBottom();
-      return div.querySelector(".bubble");
-    }
-
-    function showTyping() {
-      const div = document.createElement("div");
-      div.className = "message bot";
-      div.id = "typing";
-      div.innerHTML = `
-        <div class="avatar">G</div>
-        <div class="bubble">
-          <div class="typing-indicator">
-            <span></span><span></span><span></span>
-          </div>
-        </div>
-      `;
-      messagesEl.appendChild(div);
-      scrollToBottom();
-    }
-
-    function removeTyping() {
-      const el = document.getElementById("typing");
-      if (el) el.remove();
-    }
-
-    function escapeHtml(text) {
-      return text
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;");
-    }
-
-    function sendMessage() {
-      const text = inputEl.value.trim();
-      if (!text) return;
-      inputEl.value = "";
-      inputEl.style.height = "auto";
-      // Use "Kak" as default username for manual input
-      pendingQueue.push({ text, username: "Kak" });
-      processChatQueue();
-    }
-
-    async function processChatQueue() {
-      if (isProcessingChat || pendingQueue.length === 0) return;
-      isProcessingChat = true;
-
-      const { text, username } = pendingQueue.shift();
-
-      conversationHistory.push({ role: "user", content: text });
-      appendMessage("user", text, username);
-      showTyping();
-
-      let botBubble = null;
-      let botText = "";
-
+  function fetchAndPlay(text) {
+    return new Promise(async (resolve) => {
+      if (!voiceEnabled) return resolve();
       try {
-        const response = await fetch("/chat", {
+        const res = await fetch("/tts", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ messages: conversationHistory }),
+          body: JSON.stringify({ text }),
         });
+        if (!res.ok) return resolve();
+        const blob = await res.blob();
+        const url  = URL.createObjectURL(blob);
+        if (currentAudio) currentAudio.pause();
+        currentAudio = new Audio(url);
+        currentAudio.onended = resolve;
+        currentAudio.onerror = resolve;
+        setCharacterState("talking");
+        currentAudio.play();
+      } catch (_) { resolve(); }
+    });
+  }
 
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
+  async function processQueue() {
+    if (isSpeaking || messageQueue.length === 0) return;
+    isSpeaking = true;
+    const { username, question, answer } = messageQueue.shift();
 
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          const chunk = decoder.decode(value, { stream: true });
-          for (const line of chunk.split("\n")) {
-            if (!line.startsWith("data: ")) continue;
-            const raw = line.slice(6).trim();
-            if (raw === "[DONE]") break;
-            try {
-              const { text: delta } = JSON.parse(raw);
-              if (delta) {
-                if (!botBubble) {
-                  removeTyping();
-                  botBubble = appendMessage("bot", "");
-                }
-                botText += delta;
-                botBubble.textContent = botText;
-                scrollToBottom();
-              }
-            } catch (_) {}
-          }
+    // 1. Read comment
+    await fetchAndPlay(`${username} nanya: ${question}`);
+    // 2. Read answer
+    await fetchAndPlay(answer);
+
+    setCharacterState("idle");
+    isSpeaking = false;
+    processQueue();
+  }
+
+  function enqueueSpeak(username, question, answer) {
+    if (!voiceEnabled) return;
+    messageQueue.push({ username, question, answer });
+    processQueue();
+  }
+
+  // ── Chat logic ───────────────────────────────────────────────────────
+  const messagesEl = document.getElementById("messages");
+  const inputEl    = document.getElementById("userInput");
+  const sendBtn    = document.getElementById("sendBtn");
+  let conversationHistory = [];
+  let isProcessingChat    = false;
+  let pendingQueue        = [];
+
+  function autoResize(el) {
+    el.style.height = "auto";
+    el.style.height = Math.min(el.scrollHeight, 80) + "px";
+  }
+
+  function handleKeyDown(e) {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+  }
+
+  function sendSuggestion(btn) {
+    inputEl.value = btn.textContent;
+    sendMessage();
+  }
+
+  function scrollToBottom() { messagesEl.scrollTop = messagesEl.scrollHeight; }
+
+  function appendMessage(role, text, username) {
+    const div   = document.createElement("div");
+    div.className = `message ${role}`;
+    const label = role === "bot" ? "G" : (username ? username[0].toUpperCase() : "U");
+    div.innerHTML = `<div class="avatar">${label}</div><div class="bubble">${escapeHtml(text)}</div>`;
+    messagesEl.appendChild(div);
+    scrollToBottom();
+    return div.querySelector(".bubble");
+  }
+
+  function showTyping() {
+    const div = document.createElement("div");
+    div.className = "message bot";
+    div.id = "typing";
+    div.innerHTML = `<div class="avatar">G</div><div class="bubble"><div class="typing-indicator"><span></span><span></span><span></span></div></div>`;
+    messagesEl.appendChild(div);
+    scrollToBottom();
+  }
+
+  function removeTyping() {
+    const el = document.getElementById("typing");
+    if (el) el.remove();
+  }
+
+  function escapeHtml(t) {
+    return t.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+
+  function sendMessage() {
+    const text = inputEl.value.trim();
+    if (!text) return;
+    inputEl.value = "";
+    inputEl.style.height = "auto";
+    pendingQueue.push({ text, username: "Kak" });
+    processChatQueue();
+  }
+
+  async function processChatQueue() {
+    if (isProcessingChat || pendingQueue.length === 0) return;
+    isProcessingChat = true;
+    const { text, username } = pendingQueue.shift();
+
+    conversationHistory.push({ role: "user", content: text });
+    appendMessage("user", text, username);
+    showTyping();
+    setCharacterState("thinking");
+
+    let botBubble = null;
+    let botText   = "";
+
+    try {
+      const response = await fetch("/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: conversationHistory }),
+      });
+
+      const reader  = response.body.getReader();
+      const decoder = new TextDecoder();
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        for (const line of decoder.decode(value, { stream: true }).split("\n")) {
+          if (!line.startsWith("data: ")) continue;
+          const raw = line.slice(6).trim();
+          if (raw === "[DONE]") break;
+          try {
+            const { text: delta } = JSON.parse(raw);
+            if (delta) {
+              if (!botBubble) { removeTyping(); botBubble = appendMessage("bot", ""); }
+              botText += delta;
+              botBubble.textContent = botText;
+              scrollToBottom();
+            }
+          } catch (_) {}
         }
-
-        if (botText) {
-          conversationHistory.push({ role: "assistant", content: botText });
-          // Enqueue voice: read comment first, then answer
-          enqueueSpeak(username, text, botText);
-        }
-      } catch (err) {
-        removeTyping();
-        appendMessage("bot", "Maaf kak, ada gangguan. Coba lagi ya! 😊");
-        conversationHistory.pop();
-      } finally {
-        isProcessingChat = false;
-        processChatQueue(); // process next in queue
       }
-    }
-    // ── TikTok Live integration hook ─────────────────────────────────────
-    // Call this from external TikTok Live connector:
-    // receiveComment("username123", "chocolatos ada rasa apa?")
-    function receiveComment(username, text) {
-      pendingQueue.push({ text, username });
+
+      if (botText) {
+        conversationHistory.push({ role: "assistant", content: botText });
+        enqueueSpeak(username, text, botText);
+      }
+    } catch (err) {
+      removeTyping();
+      appendMessage("bot", "Maaf kak, ada gangguan. Coba lagi ya! 😊");
+      conversationHistory.pop();
+      setCharacterState("idle");
+    } finally {
+      isProcessingChat = false;
       processChatQueue();
     }
+  }
 
-    // Subscribe to live comment stream from server
-    const liveStream = new EventSource("/live_stream");
-    liveStream.onmessage = (e) => {
-      const { username, text } = JSON.parse(e.data);
-      receiveComment(username, text);
-    };
-    // ────────────────────────────────────────────────────────────────────
-  </script>
+  // ── TikTok Live hook ─────────────────────────────────────────────────
+  function receiveComment(username, text) {
+    pendingQueue.push({ text, username });
+    processChatQueue();
+  }
+
+  const liveStream = new EventSource("/live_stream");
+  liveStream.onmessage = (e) => {
+    const { username, text } = JSON.parse(e.data);
+    receiveComment(username, text);
+  };
+</script>
 </body>
 </html>

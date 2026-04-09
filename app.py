@@ -1,7 +1,7 @@
 import json
 import os
 import re
-from flask import Flask, render_template, request, Response, stream_with_context
+from flask import Flask, render_template, request, Response, stream_with_context, send_from_directory
 from groq import Groq
 from elevenlabs.client import ElevenLabs
 from dotenv import load_dotenv
@@ -56,6 +56,11 @@ def stream_groq(messages):
         if delta:
             yield f"data: {json.dumps({'text': delta})}\n\n"
     yield "data: [DONE]\n\n"
+
+
+@app.route("/static/<path:filename>")
+def static_files(filename):
+    return send_from_directory("static", filename)
 
 
 @app.route("/")
