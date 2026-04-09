@@ -21,6 +21,7 @@ DID_API_KEY = os.environ.get("DID_API_KEY", "")
 DID_BASE_URL = "https://api.d-id.com"
 # Public URL of character image — D-ID needs a URL, not a local file
 CHARACTER_IMAGE_URL = os.environ.get("CHARACTER_IMAGE_URL", "")
+SADTALKER_URL = os.environ.get("SADTALKER_URL", "http://127.0.0.1:5001/generate")
 
 SYSTEM_PROMPT = """Kamu adalah asisten penjual snack GarudaFood di TikTok Live. Gaya kamu: super ceria, semangat, friendly, singkat (maks 3 kalimat), pakai emoji secukupnya, selalu arahkan ke produk GarudaFood.
 
@@ -184,11 +185,11 @@ def tts():
 
 @app.route("/talk", methods=["POST"])
 def talk():
-    """Generate D-ID talking head video from text."""
+    """Generate SadTalker talking head video from text."""
     data = request.get_json()
     text = strip_emoji(data.get("text", ""))
-    if not text or not DID_API_KEY:
-        return json.dumps({"error": "missing text or DID_API_KEY"}), 400
+    if not text:
+        return json.dumps({"error": "missing text"}), 400
 
     try:
         # Step 1: Get audio from ElevenLabs
@@ -206,54 +207,26 @@ def talk():
         )
         audio_b64 = eleven_response.audio_base_64 or ""
 
-        # Step 2: Create D-ID talk using audio data URI
-        headers = {
-            "Authorization": f"Basic {DID_API_KEY}",
-            "Content-Type": "application/json",
-        }
-        talk_payload = {
-            "source_url": CHARACTER_IMAGE_URL,
-            "script": {
-                "type": "audio",
-                "audio_url": f"data:audio/mpeg;base64,{audio_b64}",
-            },
-            "config": {
-                "fluent": True,
-                "pad_audio": 0.0,
-                "stitch": True,
-            },
-        }
-        create_res = http_requests.post(
-            f"{DID_BASE_URL}/talks",
-            headers=headers,
-            json=talk_payload,
-            timeout=30,
-        )
-        create_data = create_res.json()
-        talk_id = create_data.get("id")
+        # Step 2: Send to SadTalker worker
+        try:
+            st_res = http_requests.post(
+                SADTALKER_URL,
+                json={"audio_b64": audio_b64},
+                timeout=120,
+            )
+            if st_res.ok:
+                video_url = st_res.json().get("video_url")
+                return json.dumps({
+                    "audio": audio_b64,
+                    "video_url": video_url,
+                }), 200, {"Content-Type": "application/json"}
+        except Exception as e:
+            print(f"[SadTalker] not available: {e}")
 
-        if not talk_id:
-            print(f"[D-ID ERROR] {create_data}")
-            return json.dumps({"audio": audio_b64, "video_url": None}), 200, {"Content-Type": "application/json"}
-
-        # Step 3: Poll until video ready (max 30s)
-        import time
-        video_url = None
-        for _ in range(30):
-            time.sleep(1)
-            poll = http_requests.get(f"{DID_BASE_URL}/talks/{talk_id}", headers=headers, timeout=10)
-            poll_data = poll.json()
-            status = poll_data.get("status")
-            if status == "done":
-                video_url = poll_data.get("result_url")
-                break
-            elif status == "error":
-                print(f"[D-ID ERROR] {poll_data}")
-                break
-
+        # Fallback: audio only
         return json.dumps({
             "audio": audio_b64,
-            "video_url": video_url,
+            "video_url": None,
         }), 200, {"Content-Type": "application/json"}
 
     except Exception as e:
