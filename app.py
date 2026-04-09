@@ -151,16 +151,17 @@ def tts():
             },
         )
 
-        # response has .audio_base64 and .alignment (char timings)
-        audio_b64 = response.audio_base64
-        alignment = response.alignment  # {characters, character_start_times_seconds, character_end_times_seconds}
-
+        # Response structure: audio_bytes (bytes) and alignment dict
+        import base64
+        audio_b64 = base64.b64encode(response.audio_bytes).decode('utf-8')
+        
         # Build viseme timeline from character alignment
         visemes = []
-        if alignment:
-            chars  = alignment.characters or []
-            starts = alignment.character_start_times_seconds or []
-            ends   = alignment.character_end_times_seconds or []
+        if hasattr(response, 'alignment') and response.alignment:
+            alignment = response.alignment
+            chars  = getattr(alignment, 'characters', []) or []
+            starts = getattr(alignment, 'character_start_times_seconds', []) or []
+            ends   = getattr(alignment, 'character_end_times_seconds', []) or []
             for ch, st, en in zip(chars, starts, ends):
                 visemes.append({"char": ch, "start": st, "end": en})
 
@@ -171,6 +172,8 @@ def tts():
 
     except Exception as e:
         print(f"[TTS ERROR] {e}")
+        import traceback
+        traceback.print_exc()
         return str(e), 500
 
 
