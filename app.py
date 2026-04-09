@@ -1,6 +1,8 @@
 import json
 import os
 import re
+import base64
+import requests as http_requests
 from flask import Flask, render_template, request, Response, stream_with_context, send_from_directory
 from groq import Groq
 from elevenlabs.client import ElevenLabs
@@ -14,7 +16,11 @@ groq_client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 eleven_client = ElevenLabs(api_key=os.environ.get("ELEVENLABS_API_KEY"))
 comment_queue = []  # shared queue for TikTok Live comments
 
-ELEVENLABS_VOICE_ID = os.environ.get("ELEVENLABS_VOICE_ID", "EXAVITQu4vr4xnSDxMaL")
+ELEVENLABS_VOICE_ID = os.environ.get("ELEVENLABS_VOICE_ID", "fUesUKVrbYRcEnWoLXet")
+DID_API_KEY = os.environ.get("DID_API_KEY", "")
+DID_BASE_URL = "https://api.d-id.com"
+# Public URL of character image — D-ID needs a URL, not a local file
+CHARACTER_IMAGE_URL = os.environ.get("CHARACTER_IMAGE_URL", "")
 
 SYSTEM_PROMPT = """Kamu adalah asisten penjual snack GarudaFood di TikTok Live. Gaya kamu: super ceria, semangat, friendly, singkat (maks 3 kalimat), pakai emoji secukupnya, selalu arahkan ke produk GarudaFood.
 
@@ -171,6 +177,87 @@ def tts():
 
     except Exception as e:
         print(f"[TTS ERROR] {e}")
+        import traceback
+        traceback.print_exc()
+        return str(e), 500
+
+
+@app.route("/talk", methods=["POST"])
+def talk():
+    """Generate D-ID talking head video from text."""
+    data = request.get_json()
+    text = strip_emoji(data.get("text", ""))
+    if not text or not DID_API_KEY:
+        return json.dumps({"error": "missing text or DID_API_KEY"}), 400
+
+    try:
+        # Step 1: Get audio from ElevenLabs
+        eleven_response = eleven_client.text_to_speech.convert_with_timestamps(
+            voice_id=ELEVENLABS_VOICE_ID,
+            text=text,
+            model_id="eleven_multilingual_v2",
+            language_code="id",
+            voice_settings={
+                "stability": 0.35,
+                "similarity_boost": 0.75,
+                "style": 0.60,
+                "use_speaker_boost": True,
+            },
+        )
+        audio_b64 = eleven_response.audio_base_64 or ""
+
+        # Step 2: Create D-ID talk using audio data URI
+        headers = {
+            "Authorization": f"Basic {DID_API_KEY}",
+            "Content-Type": "application/json",
+        }
+        talk_payload = {
+            "source_url": CHARACTER_IMAGE_URL,
+            "script": {
+                "type": "audio",
+                "audio_url": f"data:audio/mpeg;base64,{audio_b64}",
+            },
+            "config": {
+                "fluent": True,
+                "pad_audio": 0.0,
+                "stitch": True,
+            },
+        }
+        create_res = http_requests.post(
+            f"{DID_BASE_URL}/talks",
+            headers=headers,
+            json=talk_payload,
+            timeout=30,
+        )
+        create_data = create_res.json()
+        talk_id = create_data.get("id")
+
+        if not talk_id:
+            print(f"[D-ID ERROR] {create_data}")
+            return json.dumps({"audio": audio_b64, "video_url": None}), 200, {"Content-Type": "application/json"}
+
+        # Step 3: Poll until video ready (max 30s)
+        import time
+        video_url = None
+        for _ in range(30):
+            time.sleep(1)
+            poll = http_requests.get(f"{DID_BASE_URL}/talks/{talk_id}", headers=headers, timeout=10)
+            poll_data = poll.json()
+            status = poll_data.get("status")
+            if status == "done":
+                video_url = poll_data.get("result_url")
+                break
+            elif status == "error":
+                print(f"[D-ID ERROR] {poll_data}")
+                break
+
+        return json.dumps({
+            "audio": audio_b64,
+            "video_url": video_url,
+        }), 200, {"Content-Type": "application/json"}
+
+    except Exception as e:
+        print(f"[TALK ERROR] {e}")
         import traceback
         traceback.print_exc()
         return str(e), 500

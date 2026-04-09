@@ -405,8 +405,13 @@
         class="character-img"
         src="/static/character.png"
         alt="Garuda Food Assistant"
-        style="image-rendering: auto;"
       />
+      <video
+        id="characterVideo"
+        class="character-img"
+        style="display:none; position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:top center;"
+        playsinline
+      ></video>
     </div>
   </div>
 
@@ -488,7 +493,7 @@
     return new Promise(async (resolve) => {
       if (!voiceEnabled) return resolve();
       try {
-        const res = await fetch("/tts", {
+        const res = await fetch("/talk", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ text }),
@@ -496,44 +501,41 @@
         if (!res.ok) return resolve();
         const data = await res.json();
 
-        // Decode base64 audio
-        const audioBytes = Uint8Array.from(atob(data.audio), c => c.charCodeAt(0));
-        const blob = new Blob([audioBytes], { type: "audio/mpeg" });
-        const url  = URL.createObjectURL(blob);
-
-        if (currentAudio) currentAudio.pause();
-        currentAudio = new Audio(url);
-
-        // Drive mouth animation from viseme timing
-        const visemes = data.visemes || [];
-        const OPEN_CHARS = new Set("aeiouAEIOUaeiouàáâãäåæèéêëìíîïòóôõöùúûü");
-        let visemeTimers = [];
-
-        currentAudio.onplay = () => {
-          visemeTimers.forEach(clearTimeout);
-          visemeTimers = [];
-          visemes.forEach(({ char, start, end }) => {
-            const isOpen = OPEN_CHARS.has(char);
-            const duration = Math.max((end - start) * 1000, 60);
-            visemeTimers.push(setTimeout(() => {
-              characterWrap.classList.toggle("mouth-open", isOpen);
-            }, start * 1000));
-          });
-        };
-
-        currentAudio.onended = () => {
-          visemeTimers.forEach(clearTimeout);
-          characterWrap.classList.remove("mouth-open");
-          resolve();
-        };
-        currentAudio.onerror = () => {
-          visemeTimers.forEach(clearTimeout);
-          characterWrap.classList.remove("mouth-open");
-          resolve();
-        };
-
         setCharacterState("talking");
-        currentAudio.play();
+
+        if (data.video_url) {
+          // Play D-ID talking head video
+          const videoEl = document.getElementById("characterVideo");
+          const imgEl   = document.getElementById("characterImg");
+          videoEl.src = data.video_url;
+          videoEl.style.display = "block";
+          imgEl.style.display   = "none";
+          videoEl.onended = () => {
+            videoEl.style.display = "none";
+            imgEl.style.display   = "block";
+            setCharacterState("idle");
+            resolve();
+          };
+          videoEl.onerror = () => {
+            videoEl.style.display = "none";
+            imgEl.style.display   = "block";
+            setCharacterState("idle");
+            resolve();
+          };
+          videoEl.play();
+        } else if (data.audio) {
+          // Fallback: play audio only
+          const audioBytes = Uint8Array.from(atob(data.audio), c => c.charCodeAt(0));
+          const blob = new Blob([audioBytes], { type: "audio/mpeg" });
+          const url  = URL.createObjectURL(blob);
+          if (currentAudio) currentAudio.pause();
+          currentAudio = new Audio(url);
+          currentAudio.onended = () => { setCharacterState("idle"); resolve(); };
+          currentAudio.onerror = () => { setCharacterState("idle"); resolve(); };
+          currentAudio.play();
+        } else {
+          resolve();
+        }
       } catch (_) { resolve(); }
     });
   }
