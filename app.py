@@ -22,7 +22,6 @@ DID_BASE_URL = "https://api.d-id.com"
 # Public URL of character image — D-ID needs a URL, not a local file
 CHARACTER_IMAGE_URL = os.environ.get("CHARACTER_IMAGE_URL", "")
 SADTALKER_URL = os.environ.get("SADTALKER_URL", "http://127.0.0.1:5001/generate")
-
 SYSTEM_PROMPT = """Kamu adalah asisten penjual snack GarudaFood di TikTok Live. Gaya kamu: super ceria, semangat, friendly, singkat (maks 3 kalimat), pakai emoji secukupnya, selalu arahkan ke produk GarudaFood.
 
 Produk GarudaFood:
