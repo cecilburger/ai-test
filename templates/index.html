@@ -510,6 +510,7 @@
           videoEl.src = data.video_url;
           videoEl.style.display = "block";
           imgEl.style.display   = "none";
+          
           videoEl.onended = () => {
             videoEl.style.display = "none";
             imgEl.style.display   = "block";
@@ -522,7 +523,27 @@
             setCharacterState("idle");
             resolve();
           };
-          videoEl.play();
+          
+          // Try to play — if blocked, fallback to audio
+          videoEl.play().catch(() => {
+            console.warn("Video autoplay blocked, falling back to audio");
+            videoEl.style.display = "none";
+            imgEl.style.display   = "block";
+            // Fallback: play audio only
+            if (data.audio) {
+              const audioBytes = Uint8Array.from(atob(data.audio), c => c.charCodeAt(0));
+              const blob = new Blob([audioBytes], { type: "audio/mpeg" });
+              const url  = URL.createObjectURL(blob);
+              if (currentAudio) currentAudio.pause();
+              currentAudio = new Audio(url);
+              currentAudio.onended = () => { setCharacterState("idle"); resolve(); };
+              currentAudio.onerror = () => { setCharacterState("idle"); resolve(); };
+              currentAudio.play();
+            } else {
+              setCharacterState("idle");
+              resolve();
+            }
+          });
         } else if (data.audio) {
           // Fallback: play audio only
           const audioBytes = Uint8Array.from(atob(data.audio), c => c.charCodeAt(0));

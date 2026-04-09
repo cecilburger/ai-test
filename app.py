@@ -147,12 +147,12 @@ def tts():
         response = eleven_client.text_to_speech.convert_with_timestamps(
             voice_id=ELEVENLABS_VOICE_ID,
             text=text,
-            model_id="eleven_multilingual_v2",
+            model_id="eleven_flash_v2_5",
             language_code="id",
             voice_settings={
-                "stability": 0.35,
-                "similarity_boost": 0.75,
-                "style": 0.60,
+                "stability": 0.40,
+                "similarity_boost": 0.80,
+                "style": 0.50,
                 "use_speaker_boost": True,
             },
         )
@@ -195,12 +195,12 @@ def talk():
         eleven_response = eleven_client.text_to_speech.convert_with_timestamps(
             voice_id=ELEVENLABS_VOICE_ID,
             text=text,
-            model_id="eleven_multilingual_v2",
+            model_id="eleven_flash_v2_5",
             language_code="id",
             voice_settings={
-                "stability": 0.35,
-                "similarity_boost": 0.75,
-                "style": 0.60,
+                "stability": 0.40,
+                "similarity_boost": 0.80,
+                "style": 0.50,
                 "use_speaker_boost": True,
             },
         )
