@@ -113,34 +113,27 @@
     }
 
     .character-wrap.talking .character-img {
-      animation: talk 0.18s ease-in-out infinite alternate;
-    }
-
-    /* Lip sync — triggered per viseme */
-    .character-wrap.mouth-open .character-img {
-      animation: mouth-open 0.08s ease-out forwards;
-    }
-
-    @keyframes mouth-open {
-      0%   { transform: translateY(0) scaleY(1); }
-      50%  { transform: translateY(-4px) scaleY(1.018); }
-      100% { transform: translateY(-2px) scaleY(1.01); }
+      animation: breathe 4s ease-in-out infinite;
     }
 
     @keyframes breathe {
       0%, 100% { transform: translateY(0) scale(1); }
-      50%       { transform: translateY(-6px) scale(1.008); }
+      50%       { transform: translateY(-5px) scale(1.006); }
     }
 
     @keyframes think {
       0%, 100% { transform: translateY(0) rotate(0deg); }
-      25%       { transform: translateY(-4px) rotate(-1.5deg); }
-      75%       { transform: translateY(-2px) rotate(1deg); }
+      25%       { transform: translateY(-4px) rotate(-1deg); }
+      75%       { transform: translateY(-2px) rotate(0.8deg); }
     }
 
-    @keyframes talk {
-      from { transform: translateY(0) scaleY(1); }
-      to   { transform: translateY(-3px) scaleY(1.012); }
+    /* Canvas overlay for eye blink + mouth */
+    #faceCanvas {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 5;
     }
 
     /* State label */
@@ -406,6 +399,7 @@
         src="/static/character.png"
         alt="Garuda Food Assistant"
       />
+      <canvas id="faceCanvas"></canvas>
       <video
         id="characterVideo"
         class="character-img"
@@ -455,19 +449,151 @@
 </div>
 
 <script>
+  // ── Character Face Animator ─────────────────────────────────────────
+  const canvas  = document.getElementById("faceCanvas");
+  const ctx     = canvas.getContext("2d");
+  const imgEl   = document.getElementById("characterImg");
+
+  // Face landmark positions (% of canvas size — tuned for character.png)
+  // Adjust these values if face position differs
+  const FACE = {
+    // Left eye center (x%, y%), width%, height%
+    eyeL:   { x: 0.415, y: 0.285, w: 0.075, h: 0.028 },
+    // Right eye center
+    eyeR:   { x: 0.575, y: 0.283, w: 0.075, h: 0.028 },
+    // Mouth center
+    mouth:  { x: 0.495, y: 0.435, w: 0.13,  h: 0.022 },
+  };
+
+  let blinkState   = 0;    // 0=open, 1=closing, 2=closed, 3=opening
+  let blinkTimer   = 0;
+  let blinkNext    = 180;  // frames until next blink
+  let mouthOpen    = 0;    // 0-1 openness
+  let mouthTarget  = 0;
+  let isTalking    = false;
+  let talkPhase    = 0;
+  let frameCount   = 0;
+
+  function resizeCanvas() {
+    canvas.width  = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+  }
+  resizeCanvas();
+  window.addEventListener("resize", resizeCanvas);
+
+  // Wait for image to load before starting
+  imgEl.onload = startAnimator;
+  if (imgEl.complete) startAnimator();
+
+  function startAnimator() {
+    requestAnimationFrame(animateFrame);
+  }
+
+  function animateFrame() {
+    frameCount++;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const W = canvas.width;
+    const H = canvas.height;
+
+    // ── Blink logic ──
+    blinkTimer++;
+    if (blinkTimer >= blinkNext) {
+      blinkState = 1;
+      blinkTimer = 0;
+      blinkNext  = 150 + Math.random() * 200; // blink every 2.5-5.8s
+    }
+
+    let eyeClose = 0;
+    if (blinkState === 1) { eyeClose += 0.25; if (eyeClose >= 1) blinkState = 2; }
+    else if (blinkState === 2) { eyeClose = 1; blinkState = 3; }
+    else if (blinkState === 3) { eyeClose -= 0.25; if (eyeClose <= 0) { eyeClose = 0; blinkState = 0; } }
+
+    // ── Mouth logic ──
+    if (isTalking) {
+      talkPhase += 0.18;
+      mouthTarget = 0.35 + Math.sin(talkPhase * 3.2) * 0.3 + Math.sin(talkPhase * 7.1) * 0.15;
+      mouthTarget = Math.max(0.05, Math.min(1, mouthTarget));
+    } else {
+      mouthTarget = 0;
+    }
+    mouthOpen += (mouthTarget - mouthOpen) * 0.25;
+
+    // ── Draw eye overlays ──
+    [FACE.eyeL, FACE.eyeR].forEach(eye => {
+      const ex = eye.x * W;
+      const ey = eye.y * H;
+      const ew = eye.w * W;
+      const eh = eye.h * H;
+
+      if (eyeClose > 0) {
+        // Draw eyelid closing over eye
+        ctx.save();
+        ctx.fillStyle = getSkinColor();
+        const lidH = eh * eyeClose * 2.2;
+        // Upper lid
+        ctx.beginPath();
+        ctx.ellipse(ex, ey - eh * 0.5 + lidH * 0.5, ew * 0.55, lidH * 0.6, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Lower lid
+        ctx.beginPath();
+        ctx.ellipse(ex, ey + eh * 0.5 - lidH * 0.3, ew * 0.55, lidH * 0.4, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    });
+
+    // ── Draw mouth overlay ──
+    if (mouthOpen > 0.02) {
+      const mx = FACE.mouth.x * W;
+      const my = FACE.mouth.y * H;
+      const mw = FACE.mouth.w * W;
+      const mh = FACE.mouth.h * H;
+      const openH = mh * mouthOpen * 3.5;
+
+      ctx.save();
+      // Dark mouth interior
+      ctx.fillStyle = "rgba(30,10,10,0.85)";
+      ctx.beginPath();
+      ctx.ellipse(mx, my + openH * 0.1, mw * 0.42, openH * 0.55, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Upper lip
+      ctx.fillStyle = getLipColor();
+      ctx.beginPath();
+      ctx.ellipse(mx, my - openH * 0.3, mw * 0.48, mh * 0.55, 0, Math.PI, Math.PI * 2);
+      ctx.fill();
+
+      // Lower lip
+      ctx.beginPath();
+      ctx.ellipse(mx, my + openH * 0.55, mw * 0.48, mh * 0.65, 0, 0, Math.PI);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    requestAnimationFrame(animateFrame);
+  }
+
+  // Sample skin/lip color from image (approximate for Asian skin tone)
+  function getSkinColor() { return "rgba(220,175,140,1)"; }
+  function getLipColor()  { return "rgba(195,100,100,0.9)"; }
+
+  function setTalking(val) {
+    isTalking = val;
+    if (!val) { talkPhase = 0; mouthTarget = 0; }
+  }
+  // ────────────────────────────────────────────────────────────────────
+
   // ── Character state ──────────────────────────────────────────────────
   const characterWrap = document.getElementById("characterWrap");
   const stateBadge    = document.getElementById("stateBadge");
 
   function setCharacterState(state) {
     characterWrap.className = `character-wrap ${state}`;
-    const labels = {
-      idle:     "😊 Siap",
-      thinking: "💭 Mikir...",
-      talking:  "🗣️ Ngomong",
-    };
+    const labels = { idle: "😊 Siap", thinking: "💭 Mikir...", talking: "🗣️ Ngomong" };
     stateBadge.textContent = labels[state] || "";
-    stateBadge.className = `state-badge ${state}`;
+    stateBadge.className   = `state-badge ${state}`;
+    setTalking(state === "talking");
   }
 
   // ── Voice (ElevenLabs TTS) ───────────────────────────────────────────
