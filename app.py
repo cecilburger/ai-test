@@ -137,11 +137,11 @@ def tts():
         return "", 400
 
     try:
-        audio = eleven_client.text_to_speech.convert(
+        # Use convert_with_timestamps to get alignment data for lip sync
+        response = eleven_client.text_to_speech.convert_with_timestamps(
             voice_id=ELEVENLABS_VOICE_ID,
             text=text,
             model_id="eleven_multilingual_v2",
-            output_format="mp3_44100_128",
             language_code="id",
             voice_settings={
                 "stability": 0.35,
@@ -151,16 +151,24 @@ def tts():
             },
         )
 
-        def generate():
-            for chunk in audio:
-                if chunk:
-                    yield chunk
+        # response has .audio_base64 and .alignment (char timings)
+        audio_b64 = response.audio_base64
+        alignment = response.alignment  # {characters, character_start_times_seconds, character_end_times_seconds}
 
-        return Response(
-            stream_with_context(generate()),
-            mimetype="audio/mpeg",
-            headers={"Cache-Control": "no-cache"},
-        )
+        # Build viseme timeline from character alignment
+        visemes = []
+        if alignment:
+            chars  = alignment.characters or []
+            starts = alignment.character_start_times_seconds or []
+            ends   = alignment.character_end_times_seconds or []
+            for ch, st, en in zip(chars, starts, ends):
+                visemes.append({"char": ch, "start": st, "end": en})
+
+        return json.dumps({
+            "audio": audio_b64,
+            "visemes": visemes,
+        }), 200, {"Content-Type": "application/json"}
+
     except Exception as e:
         print(f"[TTS ERROR] {e}")
         return str(e), 500

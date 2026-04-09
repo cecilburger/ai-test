@@ -116,6 +116,17 @@
       animation: talk 0.18s ease-in-out infinite alternate;
     }
 
+    /* Lip sync — triggered per viseme */
+    .character-wrap.mouth-open .character-img {
+      animation: mouth-open 0.08s ease-out forwards;
+    }
+
+    @keyframes mouth-open {
+      0%   { transform: translateY(0) scaleY(1); }
+      50%  { transform: translateY(-4px) scaleY(1.018); }
+      100% { transform: translateY(-2px) scaleY(1.01); }
+    }
+
     @keyframes breathe {
       0%, 100% { transform: translateY(0) scale(1); }
       50%       { transform: translateY(-6px) scale(1.008); }
@@ -483,12 +494,44 @@
           body: JSON.stringify({ text }),
         });
         if (!res.ok) return resolve();
-        const blob = await res.blob();
+        const data = await res.json();
+
+        // Decode base64 audio
+        const audioBytes = Uint8Array.from(atob(data.audio), c => c.charCodeAt(0));
+        const blob = new Blob([audioBytes], { type: "audio/mpeg" });
         const url  = URL.createObjectURL(blob);
+
         if (currentAudio) currentAudio.pause();
         currentAudio = new Audio(url);
-        currentAudio.onended = resolve;
-        currentAudio.onerror = resolve;
+
+        // Drive mouth animation from viseme timing
+        const visemes = data.visemes || [];
+        const OPEN_CHARS = new Set("aeiouAEIOUaeiouàáâãäåæèéêëìíîïòóôõöùúûü");
+        let visemeTimers = [];
+
+        currentAudio.onplay = () => {
+          visemeTimers.forEach(clearTimeout);
+          visemeTimers = [];
+          visemes.forEach(({ char, start, end }) => {
+            const isOpen = OPEN_CHARS.has(char);
+            const duration = Math.max((end - start) * 1000, 60);
+            visemeTimers.push(setTimeout(() => {
+              characterWrap.classList.toggle("mouth-open", isOpen);
+            }, start * 1000));
+          });
+        };
+
+        currentAudio.onended = () => {
+          visemeTimers.forEach(clearTimeout);
+          characterWrap.classList.remove("mouth-open");
+          resolve();
+        };
+        currentAudio.onerror = () => {
+          visemeTimers.forEach(clearTimeout);
+          characterWrap.classList.remove("mouth-open");
+          resolve();
+        };
+
         setCharacterState("talking");
         currentAudio.play();
       } catch (_) { resolve(); }
