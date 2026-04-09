@@ -434,29 +434,31 @@
 
 <script>
   // ── Character Face Animator ─────────────────────────────────────────
-  const canvas  = document.getElementById("faceCanvas");
-  const ctx     = canvas.getContext("2d");
-  const imgEl   = document.getElementById("characterImg");
+  const canvas = document.getElementById("faceCanvas");
+  const ctx    = canvas.getContext("2d");
+  const imgEl  = document.getElementById("characterImg");
 
-  // Face landmark positions — calibrated for character.png
-  // Image is portrait (9:16), displayed top-aligned, object-fit:cover
-  // Panel shows roughly top 45% of the full image
-  // Face occupies roughly y:28%-65% of full image → in panel: y:62%-100%+
-  // So we map face features relative to what's visible in the panel
+  // Calibrated landmarks — adjust y values to match your photo
   const FACE = {
-    eyeL:  { x: 0.415, y: 0.575, w: 0.085, h: 0.032 },
-    eyeR:  { x: 0.585, y: 0.570, w: 0.085, h: 0.032 },
+    eyeL:  { x: 0.435, y: 0.600, w: 0.065, h: 0.022 },
+    eyeR:  { x: 0.565, y: 0.600, w: 0.065, h: 0.022 },
     mouth: { x: 0.500, y: 0.710, w: 0.145, h: 0.026 },
   };
 
-  let blinkState   = 0;    // 0=open, 1=closing, 2=closed, 3=opening
-  let blinkTimer   = 0;
-  let blinkNext    = 180;  // frames until next blink
-  let mouthOpen    = 0;    // 0-1 openness
-  let mouthTarget  = 0;
+  // Blink state machine
+  let blinkProgress = 0;   // 0=fully open, 1=fully closed
+  let blinkDir      = 0;   // 0=idle, 1=closing, -1=opening
+  let blinkTimer    = 0;
+  let blinkInterval = randomBlinkInterval();
+
+  function randomBlinkInterval() { return 120 + Math.random() * 220; } // 2–5s at 60fps
+
+  // Mouth — driven by Web Audio analyser
+  let mouthLevel   = 0;    // 0-1, smoothed audio amplitude
+  let audioCtx     = null;
+  let analyser     = null;
+  let freqData     = null;
   let isTalking    = false;
-  let talkPhase    = 0;
-  let frameCount   = 0;
 
   function resizeCanvas() {
     canvas.width  = canvas.offsetWidth;
@@ -465,122 +467,113 @@
   resizeCanvas();
   window.addEventListener("resize", resizeCanvas);
 
-  // Wait for image to load before starting
-  imgEl.onload = startAnimator;
-  if (imgEl.complete) startAnimator();
-
-  function startAnimator() {
-    requestAnimationFrame(animateFrame);
-  }
+  imgEl.onload = () => requestAnimationFrame(animateFrame);
+  if (imgEl.complete) requestAnimationFrame(animateFrame);
 
   function animateFrame() {
-    frameCount++;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const W = canvas.width, H = canvas.height;
 
-    const W = canvas.width;
-    const H = canvas.height;
-
-    // ── Blink logic ──
+    // ── Blink ──
     blinkTimer++;
-    if (blinkTimer >= blinkNext) {
-      blinkState = 1;
-      blinkTimer = 0;
-      blinkNext  = 150 + Math.random() * 200; // blink every 2.5-5.8s
+    if (blinkDir === 0 && blinkTimer >= blinkInterval) {
+      blinkDir = 1; blinkTimer = 0;
     }
-
-    let eyeClose = 0;
-    if (blinkState === 1) { eyeClose += 0.25; if (eyeClose >= 1) blinkState = 2; }
-    else if (blinkState === 2) { eyeClose = 1; blinkState = 3; }
-    else if (blinkState === 3) { eyeClose -= 0.25; if (eyeClose <= 0) { eyeClose = 0; blinkState = 0; } }
-
-    // ── Mouth logic ──
-    if (isTalking) {
-      talkPhase += 0.18;
-      mouthTarget = 0.35 + Math.sin(talkPhase * 3.2) * 0.3 + Math.sin(talkPhase * 7.1) * 0.15;
-      mouthTarget = Math.max(0.05, Math.min(1, mouthTarget));
-    } else {
-      mouthTarget = 0;
-    }
-    mouthOpen += (mouthTarget - mouthOpen) * 0.25;
-
-    // ── Draw eye overlays ──
-    [FACE.eyeL, FACE.eyeR].forEach(eye => {
-      const ex = eye.x * W;
-      const ey = eye.y * H;
-      const ew = eye.w * W;
-      const eh = eye.h * H;
-
-      if (eyeClose > 0) {
-        // Draw eyelid closing over eye
-        ctx.save();
-        ctx.fillStyle = getSkinColor();
-        const lidH = eh * eyeClose * 2.2;
-        // Upper lid
-        ctx.beginPath();
-        ctx.ellipse(ex, ey - eh * 0.5 + lidH * 0.5, ew * 0.55, lidH * 0.6, 0, 0, Math.PI * 2);
-        ctx.fill();
-        // Lower lid
-        ctx.beginPath();
-        ctx.ellipse(ex, ey + eh * 0.5 - lidH * 0.3, ew * 0.55, lidH * 0.4, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
+    if (blinkDir === 1) {
+      blinkProgress = Math.min(1, blinkProgress + 0.22);
+      if (blinkProgress >= 1) blinkDir = -1;
+    } else if (blinkDir === -1) {
+      blinkProgress = Math.max(0, blinkProgress - 0.18);
+      if (blinkProgress <= 0) {
+        blinkDir = 0;
+        blinkInterval = randomBlinkInterval();
       }
-    });
+    }
 
-    // ── Draw mouth overlay ──
-    if (mouthOpen > 0.02) {
-      const mx = FACE.mouth.x * W;
-      const my = FACE.mouth.y * H;
-      const mw = FACE.mouth.w * W;
-      const mh = FACE.mouth.h * H;
-      const openH = mh * mouthOpen * 3.5;
+    // Draw eyelid — dark semi-transparent line sweeping down over eye
+    if (blinkProgress > 0.02) {
+      [FACE.eyeL, FACE.eyeR].forEach(eye => {
+        const ex = eye.x * W, ey = eye.y * H;
+        const ew = eye.w * W, eh = eye.h * H;
+        const sweep = eh * 2.8 * blinkProgress;
+
+        ctx.save();
+        // Clip to eye region so lid doesn't spill outside
+        ctx.beginPath();
+        ctx.ellipse(ex, ey, ew * 0.6, eh * 1.6, 0, 0, Math.PI * 2);
+        ctx.clip();
+
+        // Upper eyelid sweeping down
+        const grad = ctx.createLinearGradient(ex, ey - eh, ex, ey - eh + sweep);
+        grad.addColorStop(0,   "rgba(160,110,85,1)");
+        grad.addColorStop(0.6, "rgba(140,95,72,0.95)");
+        grad.addColorStop(1,   "rgba(120,80,60,0)");
+        ctx.fillStyle = grad;
+        ctx.fillRect(ex - ew, ey - eh * 1.5, ew * 2, sweep);
+        ctx.restore();
+      });
+    }
+
+    // ── Mouth — audio driven ──
+    let targetLevel = 0;
+    if (isTalking && analyser && freqData) {
+      analyser.getByteFrequencyData(freqData);
+      // Focus on speech frequencies (300-3000Hz)
+      const start = Math.floor(300  / (audioCtx.sampleRate / analyser.fftSize));
+      const end   = Math.floor(3000 / (audioCtx.sampleRate / analyser.fftSize));
+      let sum = 0;
+      for (let i = start; i < end; i++) sum += freqData[i];
+      const avg = sum / (end - start);
+      targetLevel = Math.min(1, avg / 80);
+    }
+    // Smooth
+    mouthLevel += (targetLevel - mouthLevel) * (targetLevel > mouthLevel ? 0.4 : 0.2);
+
+    if (mouthLevel > 0.01) {
+      const mx = FACE.mouth.x * W, my = FACE.mouth.y * H;
+      const mw = FACE.mouth.w * W, mh = FACE.mouth.h * H;
+      const openH = mh * mouthLevel * 5;
 
       ctx.save();
-      // Dark mouth interior
-      ctx.fillStyle = "rgba(30,10,10,0.85)";
+      // Mouth interior (dark)
+      ctx.fillStyle = "rgba(25,8,8,0.88)";
       ctx.beginPath();
-      ctx.ellipse(mx, my + openH * 0.1, mw * 0.42, openH * 0.55, 0, 0, Math.PI * 2);
+      ctx.ellipse(mx, my + openH * 0.15, mw * 0.38, Math.max(1, openH * 0.5), 0, 0, Math.PI * 2);
       ctx.fill();
 
       // Upper lip
-      ctx.fillStyle = getLipColor();
+      ctx.fillStyle = "rgba(190,95,95,0.92)";
       ctx.beginPath();
-      ctx.ellipse(mx, my - openH * 0.3, mw * 0.48, mh * 0.55, 0, Math.PI, Math.PI * 2);
+      ctx.ellipse(mx, my - openH * 0.28, mw * 0.44, mh * 0.6, 0, Math.PI, Math.PI * 2);
       ctx.fill();
 
       // Lower lip
+      ctx.fillStyle = "rgba(200,105,100,0.88)";
       ctx.beginPath();
-      ctx.ellipse(mx, my + openH * 0.55, mw * 0.48, mh * 0.65, 0, 0, Math.PI);
+      ctx.ellipse(mx, my + openH * 0.52, mw * 0.44, mh * 0.7 + openH * 0.1, 0, 0, Math.PI);
       ctx.fill();
       ctx.restore();
     }
 
-    debugDots();
     requestAnimationFrame(animateFrame);
   }
 
-  // Debug: set to true to show red dots at landmark positions for calibration
-  function getSkinColor() { return "rgba(220,175,140,1)"; }
-  function getLipColor()  { return "rgba(195,100,100,0.9)"; }
-
-  // Debug: set to true to show red dots at landmark positions for calibration
-  const DEBUG_LANDMARKS = true;
-
-  function debugDots() {
-    if (!DEBUG_LANDMARKS) return;
-    const W = canvas.width, H = canvas.height;
-    ctx.fillStyle = "red";
-    [FACE.eyeL, FACE.eyeR, FACE.mouth].forEach(f => {
-      ctx.beginPath();
-      ctx.arc(f.x * W, f.y * H, 4, 0, Math.PI * 2);
-      ctx.fill();
-    });
+  // Connect audio element to Web Audio analyser for real-time mouth sync
+  function connectAudioAnalyser(audioElement) {
+    try {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 512;
+        freqData = new Uint8Array(analyser.frequencyBinCount);
+        analyser.connect(audioCtx.destination);
+      }
+      const source = audioCtx.createMediaElementSource(audioElement);
+      source.connect(analyser);
+    } catch(e) { console.warn("Audio analyser:", e); }
   }
 
-  function setTalking(val) {
-    isTalking = val;
-    if (!val) { talkPhase = 0; mouthTarget = 0; }
-  }
+  function setTalking(val) { isTalking = val; if (!val) mouthLevel = 0; }
   // ────────────────────────────────────────────────────────────────────
 
   // ── Character state ──────────────────────────────────────────────────
@@ -661,6 +654,7 @@
               const url  = URL.createObjectURL(blob);
               if (currentAudio) currentAudio.pause();
               currentAudio = new Audio(url);
+              connectAudioAnalyser(currentAudio);
               currentAudio.onended = () => { setCharacterState("idle"); resolve(); };
               currentAudio.onerror = () => { setCharacterState("idle"); resolve(); };
               currentAudio.play();
@@ -676,6 +670,7 @@
           const url  = URL.createObjectURL(blob);
           if (currentAudio) currentAudio.pause();
           currentAudio = new Audio(url);
+          connectAudioAnalyser(currentAudio);
           currentAudio.onended = () => { setCharacterState("idle"); resolve(); };
           currentAudio.onerror = () => { setCharacterState("idle"); resolve(); };
           currentAudio.play();
