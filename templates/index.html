@@ -460,12 +460,9 @@
   // Face occupies roughly y:28%-65% of full image → in panel: y:62%-100%+
   // So we map face features relative to what's visible in the panel
   const FACE = {
-    // Left eye (viewer's left = character's right)
-    eyeL:  { x: 0.415, y: 0.52, w: 0.085, h: 0.032 },
-    // Right eye
-    eyeR:  { x: 0.585, y: 0.515, w: 0.085, h: 0.032 },
-    // Mouth
-    mouth: { x: 0.500, y: 0.685, w: 0.145, h: 0.026 },
+    eyeL:  { x: 0.415, y: 0.615, w: 0.085, h: 0.032 },
+    eyeR:  { x: 0.585, y: 0.610, w: 0.085, h: 0.032 },
+    mouth: { x: 0.500, y: 0.760, w: 0.145, h: 0.026 },
   };
 
   let blinkState   = 0;    // 0=open, 1=closing, 2=closed, 3=opening
