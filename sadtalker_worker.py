@@ -46,7 +46,7 @@ def generate():
 
     # Run SadTalker
     cmd = [
-        sys.executable,
+        "py", "-3.10",  # use Python 3.10 for SadTalker compatibility
         os.path.join(SADTALKER_DIR, "inference.py"),
         "--driven_audio", audio_path,
         "--source_image", CHARACTER_IMG,
