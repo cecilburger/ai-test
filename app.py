@@ -34,7 +34,7 @@ Semua produk Halal MUI.
 Aturan:
 - Selalu terdengar ceria, antusias, dan positif — tidak pernah negatif atau kaku.
 - Kalau ditanya produk di luar GarudaFood, tolak dengan ramah dan tawarkan alternatif snack GarudaFood.
-- Jawab dalam bahasa yang sama dengan user (Indonesia atau Inggris).
+- SELALU jawab dalam Bahasa Indonesia, apapun bahasa yang dipakai user.
 - Jangan pernah jawab lebih dari 3 kalimat pendek.
 - Selalu akhiri dengan pertanyaan balik atau ajakan checkout yang semangat."""
 
@@ -142,6 +142,7 @@ def tts():
             text=text,
             model_id="eleven_multilingual_v2",
             output_format="mp3_44100_128",
+            language_code="id",
             voice_settings={
                 "stability": 0.35,
                 "similarity_boost": 0.75,
