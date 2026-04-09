@@ -454,15 +454,18 @@
   const ctx     = canvas.getContext("2d");
   const imgEl   = document.getElementById("characterImg");
 
-  // Face landmark positions (% of canvas size — tuned for character.png)
-  // Adjust these values if face position differs
+  // Face landmark positions — calibrated for character.png
+  // Image is portrait (9:16), displayed top-aligned, object-fit:cover
+  // Panel shows roughly top 45% of the full image
+  // Face occupies roughly y:28%-65% of full image → in panel: y:62%-100%+
+  // So we map face features relative to what's visible in the panel
   const FACE = {
-    // Left eye center (x%, y%), width%, height%
-    eyeL:   { x: 0.415, y: 0.285, w: 0.075, h: 0.028 },
-    // Right eye center
-    eyeR:   { x: 0.575, y: 0.283, w: 0.075, h: 0.028 },
-    // Mouth center
-    mouth:  { x: 0.495, y: 0.435, w: 0.13,  h: 0.022 },
+    // Left eye (viewer's left = character's right)
+    eyeL:  { x: 0.415, y: 0.52, w: 0.085, h: 0.032 },
+    // Right eye
+    eyeR:  { x: 0.585, y: 0.515, w: 0.085, h: 0.032 },
+    // Mouth
+    mouth: { x: 0.500, y: 0.685, w: 0.145, h: 0.026 },
   };
 
   let blinkState   = 0;    // 0=open, 1=closing, 2=closed, 3=opening
@@ -571,12 +574,27 @@
       ctx.restore();
     }
 
+    debugDots();
     requestAnimationFrame(animateFrame);
   }
 
-  // Sample skin/lip color from image (approximate for Asian skin tone)
+  // Debug: set to true to show red dots at landmark positions for calibration
   function getSkinColor() { return "rgba(220,175,140,1)"; }
   function getLipColor()  { return "rgba(195,100,100,0.9)"; }
+
+  // Debug: set to true to show red dots at landmark positions for calibration
+  const DEBUG_LANDMARKS = true;
+
+  function debugDots() {
+    if (!DEBUG_LANDMARKS) return;
+    const W = canvas.width, H = canvas.height;
+    ctx.fillStyle = "red";
+    [FACE.eyeL, FACE.eyeR, FACE.mouth].forEach(f => {
+      ctx.beginPath();
+      ctx.arc(f.x * W, f.y * H, 4, 0, Math.PI * 2);
+      ctx.fill();
+    });
+  }
 
   function setTalking(val) {
     isTalking = val;
