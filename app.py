@@ -152,9 +152,8 @@ def tts():
         )
 
         # Response structure: audio_bytes (bytes) and alignment dict
-        import base64
-        audio_b64 = base64.b64encode(response.audio_bytes).decode('utf-8')
-        
+        audio_b64 = response.audio_base_64 or ""
+
         # Build viseme timeline from character alignment
         visemes = []
         if hasattr(response, 'alignment') and response.alignment:
