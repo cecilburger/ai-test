@@ -84,11 +84,9 @@
   <!-- LEFT: VIDEO -->
   <div class="video-panel">
     <span class="live-badge">LIVE</span>
-    <iframe
-      src="https://www.youtube.com/embed/V-TU4d5n9ak?autoplay=1&mute=1&loop=1&playlist=V-TU4d5n9ak"
-      allow="autoplay"
-      style="position:absolute; inset:0; width:100%; height:100%; border:none;"
-    ></iframe>
+    <video autoplay loop muted playsinline style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;">
+      <source src="/static/2hrsvideo.mp4" type="video/mp4" />
+    </video>
     <video id="wavOverlay" playsinline style="display:none; position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:5;"></video>
   </div>
 
