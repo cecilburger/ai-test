@@ -123,6 +123,32 @@
   // ── Voice ──────────────────────────────────────────────────────────
   let voiceEnabled = true, currentAudio = null, isSpeaking = false;
   const messageQueue = [];
+  let idleAudio = null;
+  let idlePlaying = false;
+
+  function startIdleLoop() {
+    if (!voiceEnabled || idlePlaying || messageQueue.length > 0 || isSpeaking) return;
+    idlePlaying = true;
+    idleAudio = new Audio("/static/auto1.mp3");
+    idleAudio.onended = () => {
+      idlePlaying = false;
+      // Only loop if still no messages pending
+      if (messageQueue.length === 0 && !isSpeaking) {
+        startIdleLoop();
+      }
+    };
+    idleAudio.onerror = () => { idlePlaying = false; };
+    idleAudio.play().catch(() => { idlePlaying = false; });
+  }
+
+  function stopIdleLoop() {
+    if (idleAudio) {
+      idleAudio.onended = null;
+      idleAudio.pause();
+      idleAudio = null;
+    }
+    idlePlaying = false;
+  }
 
   function toggleVoice() {
     voiceEnabled = !voiceEnabled;
@@ -130,6 +156,8 @@
     btn.textContent = voiceEnabled ? "🔊" : "🔇";
     btn.classList.toggle("muted", !voiceEnabled);
     if (!voiceEnabled && currentAudio) { currentAudio.pause(); currentAudio = null; isSpeaking = false; }
+    if (!voiceEnabled) stopIdleLoop();
+    if (voiceEnabled) startIdleLoop();
   }
 
   function fetchAndPlay(text) {
@@ -181,15 +209,21 @@
 
   async function processQueue() {
     if (isSpeaking || messageQueue.length === 0) return;
+    stopIdleLoop();
     isSpeaking = true;
     const { answer } = messageQueue.shift();
     await fetchAndPlay(answer);
     isSpeaking = false;
-    processQueue();
+    if (messageQueue.length > 0) {
+      processQueue();
+    } else {
+      startIdleLoop();
+    }
   }
 
   function enqueueSpeak(username, question, answer) {
     if (!voiceEnabled) return;
+    stopIdleLoop();
     messageQueue.push({ answer });
     processQueue();
   }
@@ -274,6 +308,17 @@
   function receiveComment(username, text) { pendingQueue.push({ text, username }); processChatQueue(); }
   const liveStream = new EventSource("/live_stream");
   liveStream.onmessage = (e) => { const { username, text } = JSON.parse(e.data); receiveComment(username, text); };
+
+  // Start idle loop on first user interaction (browser autoplay policy)
+  document.addEventListener("click", function startIdle() {
+    startIdleLoop();
+    document.removeEventListener("click", startIdle);
+  }, { once: true });
+
+  // Also start when send button is clicked
+  document.getElementById("sendBtn").addEventListener("click", () => {
+    if (!idlePlaying && !isSpeaking) startIdleLoop();
+  });
 </script>
 </body>
 </html>
