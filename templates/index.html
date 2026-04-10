@@ -291,6 +291,27 @@
     .send-btn:hover { transform: translateY(-1px); box-shadow: 0 5px 18px rgba(99,102,241,0.55); }
     .send-btn:disabled { background: rgba(255,255,255,0.07); box-shadow: none; cursor: not-allowed; transform: none; }
     .send-btn svg { width: 16px; height: 16px; fill: white; }
+
+    .voice-btn {
+      position: fixed;
+      bottom: 16px;
+      left: 16px;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(99,102,241,0.2);
+      border: 1px solid rgba(99,102,241,0.4);
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      transition: all 0.2s;
+    }
+    .voice-btn:hover { background: rgba(99,102,241,0.4); }
+    .voice-btn.muted { opacity: 0.35; }
   </style>
 </head>
 <body>
@@ -516,6 +537,8 @@
     }
   }
 
+</body>
+</html>
   // TikTok Live hook
   function receiveComment(username, text) {
     pendingQueue.push({ text, username });
@@ -528,5 +551,9 @@
     receiveComment(username, text);
   };
 </script>
+
+<!-- Minimal voice toggle, bottom-left -->
+<button class="voice-btn" id="voiceBtn" onclick="toggleVoice()" title="Toggle suara">🔊</button>
+
 </body>
 </html>

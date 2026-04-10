@@ -186,9 +186,9 @@ def talk():
             model_id="eleven_flash_v2_5",
             language_code="id",
             voice_settings={
-                "stability": 0.40,
+                "stability": 0.30,          # lebih ekspresif, variasi intonasi natural
                 "similarity_boost": 0.80,
-                "style": 0.50,
+                "style": 0.65,              # energik seperti orang live
                 "use_speaker_boost": True,
             },
         )
