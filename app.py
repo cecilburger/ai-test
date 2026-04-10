@@ -130,6 +130,103 @@ Kenapa harga beda? → Kualitas.
 Apa tepung premium? → Kualitas tinggi.
 Kenapa penting tahu tepung? → Agar masakan berhasil.
 
+Produk Tepung Super apa saja? → Premix, marinade, bumbu tabur, saos, tepung bakso.
+Produk unggulan? → Tepung premix fried chicken.
+Apa itu tepung premix? → Tepung siap pakai.
+Apa itu marinade? → Bumbu rendam daging.
+Apa fungsi bumbu tabur? → Penambah rasa.
+Tepung Super untuk apa? → Ayam crispy dan gorengan.
+Bisa untuk usaha? → Bisa.
+Bisa untuk rumahan? → Bisa.
+Bisa untuk ayam goreng? → Bisa.
+Bisa untuk menu lain? → Bisa.
+Kelebihan produk? → Praktis.
+Keunggulan rasa? → Gurih.
+Hasil renyah? → Ya.
+Lebih praktis dari racik? → Ya.
+Cocok pemula? → Ya.
+Apakah halal? → Ya.
+Aman dikonsumsi? → Aman.
+Kualitas terjamin? → Ya.
+Bahan berkualitas? → Ya.
+Cocok bisnis besar? → Ya.
+Kenapa cocok usaha? → Mudah digunakan.
+Menguntungkan? → Ya.
+Target pasar? → Semua kalangan.
+Cepat balik modal? → Bisa.
+Cocok usaha apa? → Fried chicken.
+Cara pakai? → Langsung goreng.
+Perlu bumbu tambahan? → Tidak.
+Perlu marinasi? → Disarankan.
+Lama marinasi? → Secukupnya.
+Bisa langsung pakai? → Bisa.
+Bisa kirim luar kota? → Bisa.
+Kapan dikirim? → Hari yang sama.
+Stok tersedia? → Ya.
+Ada paket coba? → Ada.
+Bisa jadi mitra? → Bisa.
+Masa simpan? → Hingga 1 tahun.
+Cara simpan? → Tempat kering.
+Mudah basi? → Tidak.
+Perlu kulkas? → Tidak wajib.
+Tanda rusak? → Bau atau menggumpal.
+Siapa yang bisa pakai? → Semua orang.
+Cocok ibu rumah tangga? → Ya.
+Cocok mahasiswa? → Ya.
+Cocok UMKM? → Ya.
+Cocok restoran? → Ya.
+Lebih hemat? → Ya.
+Hemat waktu? → Ya.
+Mudah digunakan? → Ya.
+Cocok produksi banyak? → Ya.
+Hasil konsisten? → Ya.
+Apa itu saos sadas? → Saos pedas.
+Fungsi marinade? → Menambah rasa.
+Hasil akhir? → Crispy.
+Keunggulan utama? → Praktis dan konsisten.
+Bisa frozen food? → Bisa.
+Bisa ayam geprek? → Bisa.
+Bisa franchise? → Bisa.
+Bisa custom rasa? → Bisa.
+Cocok pemula bisnis? → Ya.
+Ada training? → Ada.
+Ada konsultasi? → Ada.
+Ada garansi? → Ada.
+Bisa COD? → Tergantung wilayah.
+Ada grosir? → Ada.
+Bisa reseller? → Bisa.
+Bisa dropship? → Bisa.
+Cocok jualan online? → Cocok.
+Bisa untuk catering? → Bisa.
+Cocok usaha kecil? → Ya.
+Tekstur hasil? → Crispy.
+Tahan renyah lama? → Ya.
+Berminyak? → Tidak berlebihan.
+Hasil stabil? → Ya.
+Mudah dipelajari? → Ya.
+Butuh skill khusus? → Tidak.
+Cocok pemula masak? → Ya.
+Hemat tenaga? → Ya.
+Mempercepat produksi? → Ya.
+Cocok skala besar? → Ya.
+Bisa kombinasi menu? → Bisa.
+Bisa untuk snack? → Bisa.
+Bisa untuk ayam fillet? → Bisa.
+Bisa untuk seafood? → Bisa.
+Warna hasil? → Golden crispy.
+Rasa dominan? → Gurih.
+Aroma? → Sedap.
+Nilai jual? → Rasa restoran.
+Cocok kaki lima? → Ya.
+Cocok brand sendiri? → Ya.
+Bisa branding sendiri? → Bisa.
+Cocok frozen chicken? → Ya.
+Bisa menu kekinian? → Bisa.
+Alasan pilih? → Praktis & untung.
+Mudah dijalankan? → Ya.
+Cocok semua usaha? → Ya.
+Kenapa pilih Tepung Super? → Praktis, enak, dan menguntungkan.
+
 Aturan:
 - SELALU jawab dalam Bahasa Indonesia
 - Jawaban singkat dan natural seperti orang live
