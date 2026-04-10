@@ -134,11 +134,11 @@
     idleAudio = new Audio(idleFiles[idleIndex]);
     idleAudio.onended = () => {
       idlePlaying = false;
-      idleIndex = (idleIndex + 1) % idleFiles.length; // advance sequence
+      idleIndex = (idleIndex + 1) % idleFiles.length;
       if (messageQueue.length > 0) {
-        processQueue(); // comment was queued while idle was playing
+        processQueue();
       } else {
-        resetIdleTimer(); // wait 3s then play next
+        playNextIdle(); // no wait between auto files
       }
     };
     idleAudio.onerror = () => { idlePlaying = false; resetIdleTimer(); };
