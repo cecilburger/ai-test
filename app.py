@@ -220,7 +220,8 @@ def talk():
         print(f"[TALK ERROR] {e}")
         import traceback
         traceback.print_exc()
-        return str(e), 500
+        # Fallback: return empty so frontend uses Web Speech API
+        return json.dumps({"audio": None, "video_url": None}), 200, {"Content-Type": "application/json"}
 
 
 if __name__ == "__main__":

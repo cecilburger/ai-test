@@ -137,19 +137,36 @@
       if (!voiceEnabled) return resolve();
       try {
         const res = await fetch("/talk", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text }) });
-        if (!res.ok) return resolve();
+        if (!res.ok) return speakFallback(text, resolve);
         const data = await res.json();
         if (data.video_url) {
           const overlay = document.getElementById("wavOverlay");
           overlay.src = data.video_url; overlay.style.display = "block";
           overlay.onended = () => { overlay.style.display = "none"; resolve(); };
           overlay.onerror = () => { overlay.style.display = "none"; resolve(); };
-          overlay.play().catch(() => { overlay.style.display = "none"; if (data.audio) playAudio(data.audio, resolve); else resolve(); });
+          overlay.play().catch(() => { overlay.style.display = "none"; if (data.audio) playAudio(data.audio, resolve); else speakFallback(text, resolve); });
         } else if (data.audio) {
           playAudio(data.audio, resolve);
-        } else { resolve(); }
-      } catch (_) { resolve(); }
+        } else {
+          speakFallback(text, resolve);
+        }
+      } catch (_) { speakFallback(text, resolve); }
     });
+  }
+
+  // Web Speech API fallback when ElevenLabs quota exceeded
+  function speakFallback(text, resolve) {
+    if (!("speechSynthesis" in window)) return resolve();
+    speechSynthesis.cancel();
+    const clean = text.replace(/[\u{1F300}-\u{1FAFF}]/gu, "").trim();
+    if (!clean) return resolve();
+    const utt = new SpeechSynthesisUtterance(clean);
+    const voices = speechSynthesis.getVoices();
+    const idVoice = voices.find(v => v.lang.startsWith("id")) || voices[0];
+    if (idVoice) utt.voice = idVoice;
+    utt.lang = "id-ID"; utt.rate = 1.05; utt.pitch = 1.1;
+    utt.onend = resolve; utt.onerror = resolve;
+    speechSynthesis.speak(utt);
   }
 
   function playAudio(b64, resolve) {
