@@ -14,7 +14,7 @@ from TikTokLive import TikTokLiveClient
 from TikTokLive.events import CommentEvent, ConnectEvent, DisconnectEvent
 
 # TikTok username to connect to (without @)
-TIKTOK_USERNAME = "garudafood_officialstore"
+TIKTOK_USERNAME = "skintific.official.store"
 
 # Chatbot endpoint
 CHATBOT_URL = "http://127.0.0.1:5000/live_comment"
