@@ -123,22 +123,31 @@
   // ── Voice ──────────────────────────────────────────────────────────
   let voiceEnabled = true, currentAudio = null, isSpeaking = false;
   const messageQueue = [];
-  let idleAudio = null;
   let idlePlaying = false;
+  let idleAudio = null;
+  let idleIndex = 0; // alternates between auto1 and auto2
+  const idleFiles = ["/static/auto1.mp3", "/static/auto2.mp3"];
 
-  function startIdleLoop() {
-    if (!voiceEnabled || idlePlaying || messageQueue.length > 0 || isSpeaking) return;
+  function playNextIdle() {
+    if (!voiceEnabled || isSpeaking || messageQueue.length > 0) return;
     idlePlaying = true;
-    idleAudio = new Audio("/static/auto1.mp3");
+    idleAudio = new Audio(idleFiles[idleIndex]);
     idleAudio.onended = () => {
       idlePlaying = false;
-      // Only loop if still no messages pending
-      if (messageQueue.length === 0 && !isSpeaking) {
-        startIdleLoop();
+      idleIndex = (idleIndex + 1) % idleFiles.length; // advance sequence
+      if (messageQueue.length > 0) {
+        processQueue(); // comment was queued while idle was playing
+      } else {
+        resetIdleTimer(); // wait 3s then play next
       }
     };
-    idleAudio.onerror = () => { idlePlaying = false; };
+    idleAudio.onerror = () => { idlePlaying = false; resetIdleTimer(); };
     idleAudio.play().catch(() => { idlePlaying = false; });
+  }
+
+  function startIdleLoop() {
+    if (!voiceEnabled || idlePlaying || isSpeaking || messageQueue.length > 0) return;
+    playNextIdle();
   }
 
   function stopIdleLoop() {
@@ -223,9 +232,10 @@
 
   function enqueueSpeak(username, question, answer) {
     if (!voiceEnabled) return;
-    stopIdleLoop();
     messageQueue.push({ answer });
-    processQueue();
+    // If idle is currently playing, let it finish — processQueue runs in onended
+    // If idle is NOT playing, start immediately
+    if (!idlePlaying) processQueue();
   }
 
   // ── Chat ───────────────────────────────────────────────────────────
