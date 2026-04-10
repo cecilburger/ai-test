@@ -183,12 +183,12 @@ def talk():
         eleven_response = eleven_client.text_to_speech.convert_with_timestamps(
             voice_id=ELEVENLABS_VOICE_ID,
             text=text,
-            model_id="eleven_flash_v2_5",
+            model_id="eleven_multilingual_v2",
             language_code="id",
             voice_settings={
-                "stability": 0.30,          # lebih ekspresif, variasi intonasi natural
+                "stability": 0.30,
                 "similarity_boost": 0.80,
-                "style": 0.65,              # energik seperti orang live
+                "style": 0.65,
                 "use_speaker_boost": True,
             },
         )
