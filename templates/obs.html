@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OBS View</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #000; width: 100vw; height: 100vh; overflow: hidden; }
+
+    /* Full screen video */
+    #mainVideo {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    /* Wav2Lip overlay */
+    #wavOverlay {
+      display: none;
+      position: absolute;
+      inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      z-index: 5;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Your video plays here fullscreen -->
+  <video id="mainVideo" autoplay loop muted playsinline>
+    <source src="/static/idle.mp4" type="video/mp4" />
+  </video>
+
+  <!-- Wav2Lip talking head overlays when bot speaks -->
+  <video id="wavOverlay" playsinline></video>
+
+<script>
+  // Poll for new audio from the bot and play it
+  let isSpeaking = false;
+  const audioQueue = [];
+
+  // Subscribe to bot answers via SSE
+  const botStream = new EventSource("/bot_stream");
+  botStream.onmessage = (e) => {
+    const { audio, video_url } = JSON.parse(e.data);
+    audioQueue.push({ audio, video_url });
+    processAudioQueue();
+  };
+
+  async function processAudioQueue() {
+    if (isSpeaking || audioQueue.length === 0) return;
+    isSpeaking = true;
+    const { audio, video_url } = audioQueue.shift();
+
+    if (video_url) {
+      await playVideo(video_url);
+    } else if (audio) {
+      await playAudio(audio);
+    }
+
+    isSpeaking = false;
+    processAudioQueue();
+  }
+
+  function playVideo(url) {
+    return new Promise((resolve) => {
+      const overlay = document.getElementById("wavOverlay");
+      const main    = document.getElementById("mainVideo");
+      overlay.src = url;
+      overlay.style.display = "block";
+      main.style.display = "none";
+      overlay.onended = () => { overlay.style.display = "none"; main.style.display = "block"; resolve(); };
+      overlay.onerror = () => { overlay.style.display = "none"; main.style.display = "block"; resolve(); };
+      overlay.play().catch(resolve);
+    });
+  }
+
+  function playAudio(b64) {
+    return new Promise((resolve) => {
+      const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+      const url   = URL.createObjectURL(new Blob([bytes], { type: "audio/mpeg" }));
+      const audio = new Audio(url);
+      audio.onended = resolve;
+      audio.onerror = resolve;
+      audio.play().catch(resolve);
+    });
+  }
+</script>
+</body>
+</html>

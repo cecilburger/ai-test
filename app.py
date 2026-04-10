@@ -15,6 +15,7 @@ app = Flask(__name__)
 groq_client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 eleven_client = ElevenLabs(api_key=os.environ.get("ELEVENLABS_API_KEY"))
 comment_queue = []  # shared queue for TikTok Live comments
+bot_audio_queue = []  # audio pushed to OBS view
 
 ELEVENLABS_VOICE_ID = os.environ.get("ELEVENLABS_VOICE_ID", "fUesUKVrbYRcEnWoLXet")
 DID_API_KEY = os.environ.get("DID_API_KEY", "")
@@ -60,6 +61,11 @@ def static_files(filename):
 @app.route("/")
 def index():
     return render_template("index.html")
+
+
+@app.route("/obs")
+def obs():
+    return render_template("obs.html")
 
 
 @app.route("/chat", methods=["POST"])
@@ -203,25 +209,43 @@ def talk():
             )
             if st_res.ok:
                 video_url = st_res.json().get("video_url")
-                return json.dumps({
-                    "audio": audio_b64,
-                    "video_url": video_url,
-                }), 200, {"Content-Type": "application/json"}
+                result = json.dumps({"audio": audio_b64, "video_url": video_url})
+                bot_audio_queue.append({"audio": audio_b64, "video_url": video_url})
+                return result, 200, {"Content-Type": "application/json"}
         except Exception as e:
             print(f"[SadTalker] not available: {e}")
 
         # Fallback: audio only
-        return json.dumps({
+        result = json.dumps({
             "audio": audio_b64,
             "video_url": None,
-        }), 200, {"Content-Type": "application/json"}
+        })
+        bot_audio_queue.append({"audio": audio_b64, "video_url": None})
+        return result, 200, {"Content-Type": "application/json"}
 
     except Exception as e:
         print(f"[TALK ERROR] {e}")
         import traceback
         traceback.print_exc()
-        # Fallback: return empty so frontend uses Web Speech API
         return json.dumps({"audio": None, "video_url": None}), 200, {"Content-Type": "application/json"}
+
+
+@app.route("/bot_stream")
+def bot_stream():
+    """SSE — OBS view subscribes to get audio/video pushed when bot speaks."""
+    def event_stream():
+        last = 0
+        while True:
+            if len(bot_audio_queue) > last:
+                item = bot_audio_queue[last]
+                last += 1
+                yield f"data: {json.dumps(item)}\n\n"
+            else:
+                import time
+                time.sleep(0.3)
+    return Response(stream_with_context(event_stream()),
+                    mimetype="text/event-stream",
+                    headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
 
 if __name__ == "__main__":
