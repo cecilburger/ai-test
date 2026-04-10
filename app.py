@@ -293,7 +293,7 @@ def talk():
         eleven_response = eleven_client.text_to_speech.convert_with_timestamps(
             voice_id=ELEVENLABS_VOICE_ID,
             text=text,
-            model_id="eleven_multilingual_v2",
+            model_id="eleven_v3",
             language_code="id",
             voice_settings={
                 "stability": 0.30,
