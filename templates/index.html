@@ -211,6 +211,7 @@
     const url = URL.createObjectURL(new Blob([bytes], { type: "audio/mpeg" }));
     if (currentAudio) currentAudio.pause();
     currentAudio = new Audio(url);
+    currentAudio.playbackRate = 1.4;
     currentAudio.onended = resolve;
     currentAudio.onerror = resolve;
     currentAudio.play();
