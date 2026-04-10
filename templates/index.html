@@ -96,7 +96,8 @@
   <div class="chat-panel">
     <div class="messages" id="messages">
       <div class="welcome">
-        <p>Halo! Tanya apa aja ya 😊</p>
+        <p style="font-size:10px; opacity:0.3; letter-spacing:1px; text-transform:uppercase;">Monitor Live Chat</p>
+        <p style="margin-top:6px;">Komentar dari live akan muncul di sini 👀</p>
         <div class="suggestions">
           <button class="suggestion-btn" onclick="sendSuggestion(this)">Halo kak!</button>
           <button class="suggestion-btn" onclick="sendSuggestion(this)">Cerita dong</button>
@@ -164,8 +165,7 @@
   async function processQueue() {
     if (isSpeaking || messageQueue.length === 0) return;
     isSpeaking = true;
-    const { username, question, answer } = messageQueue.shift();
-    await fetchAndPlay(`${username} nanya: ${question}`);
+    const { answer } = messageQueue.shift();
     await fetchAndPlay(answer);
     isSpeaking = false;
     processQueue();
@@ -173,7 +173,7 @@
 
   function enqueueSpeak(username, question, answer) {
     if (!voiceEnabled) return;
-    messageQueue.push({ username, question, answer });
+    messageQueue.push({ answer });
     processQueue();
   }
 
@@ -241,7 +241,11 @@
           } catch (_) {}
         }
       }
-      if (botText) { conversationHistory.push({ role: "assistant", content: botText }); enqueueSpeak(username, text, botText); }
+      if (botText) {
+        conversationHistory.push({ role: "assistant", content: botText });
+        // Fire audio in parallel — don't await, let it play while next message can be queued
+        enqueueSpeak(username, text, botText);
+      }
     } catch (err) {
       removeTyping(); appendMessage("bot", "Maaf, ada gangguan. Coba lagi ya! 😊"); conversationHistory.pop();
     } finally {
