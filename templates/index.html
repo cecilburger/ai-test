@@ -217,7 +217,7 @@
     if (messageQueue.length > 0) {
       processQueue();
     } else {
-      startIdleLoop();
+      resetIdleTimer();
     }
   }
 
@@ -305,7 +305,11 @@
   }
 
   // TikTok Live
-  function receiveComment(username, text) { pendingQueue.push({ text, username }); processChatQueue(); }
+  function receiveComment(username, text) {
+    clearTimeout(idleTimer);
+    pendingQueue.push({ text, username });
+    processChatQueue();
+  }
   const liveStream = new EventSource("/live_stream");
   liveStream.onmessage = (e) => { const { username, text } = JSON.parse(e.data); receiveComment(username, text); };
 
@@ -319,6 +323,16 @@
   document.getElementById("sendBtn").addEventListener("click", () => {
     if (!idlePlaying && !isSpeaking) startIdleLoop();
   });
+
+  // Start idle after 3 seconds of no comments
+  let idleTimer = null;
+  function resetIdleTimer() {
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(() => {
+      if (!isSpeaking && messageQueue.length === 0) startIdleLoop();
+    }, 3000);
+  }
+  resetIdleTimer();
 </script>
 </body>
 </html>
