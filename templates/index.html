@@ -300,21 +300,13 @@
     <span class="live-badge">LIVE</span>
 
     <iframe
-      id="liveVideo"
-      src="https://www.youtube.com/embed/V-TU4d5n9ak?autoplay=1&mute=1&loop=1&playlist=V-TU4d5n9ak&controls=0&modestbranding=1"
-      frameborder="0"
-      allow="autoplay; encrypted-media"
-      allowfullscreen
-      style="width:100%; height:100%; border:none;"
+      src="https://www.youtube.com/embed/V-TU4d5n9ak?autoplay=1&mute=1&loop=1&playlist=V-TU4d5n9ak"
+      allow="autoplay"
+      style="position:absolute; inset:0; width:100%; height:100%; border:none;"
     ></iframe>
 
     <!-- Wav2Lip output overlays here -->
     <video id="wavOverlay" playsinline style="display:none; position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:5;"></video>
-
-    <div class="video-placeholder" id="videoPlaceholder" style="display:none;">
-      <div class="icon">🎬</div>
-      <p>Area video live<br><small style="opacity:0.5">Video akan tampil di sini</small></p>
-    </div>
   </div>
 
   <!-- RIGHT: CHAT PANEL -->
