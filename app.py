@@ -46,14 +46,28 @@ Bumbu inti fried chicken Tepung Super terdiri dari 2 produk utama:
 - 1 kg marinade cukup untuk 50 ekor ayam (50 kg)
 - Cara pakai: Larutkan 20 gr marinade ke dalam 80 cc air, aduk hingga larut, tuang ke potongan ayam bersih, aduk rata hingga bumbu menyusut dan terserap ke dalam daging
 
+=== CARA PENGGUNAAN TEPUNG BIANG 1801 ===
+1. Campurkan 200 gr Tepung Biang dengan 1 kg Tepung Terigu (Segitiga atau merek lainnya)
+2. Aduk sampai tercampur rata
+3. Tepung siap digunakan untuk penepungan ayam
+
+=== PEMESANAN & PENGIRIMAN ===
+- Pesan sebelum jam 17.30 → dikirim hari yang sama
+- Hari Minggu: pesan sebelum jam 16.00 → dikirim hari yang sama
+
+=== PENYIMPANAN ===
+- Stok selalu baru, tahan hingga 6 bulan
+- Simpan di tempat sejuk, bersih, dan kering
+- Rapatkan tutup setelah dibuka
+- Hindari sinar matahari langsung
+- Hindari percikan air dan bahan berbau
+
 === INFORMASI UMUM PRODUK ===
 - Produk: Premix Biang 1801 dan Marinade 1802
 - Fungsi: Bumbu fried chicken crispy
 - Hasil: Ayam crispy, gurih, golden, renyah tahan lama
 - Cocok untuk: Usaha fried chicken, rumahan, UMKM, restoran, catering, frozen food
 - Halal: Ya
-- Masa simpan: Hingga 1 tahun
-- Cara simpan: Tempat kering, tidak perlu kulkas
 - Tanda rusak: Bau atau menggumpal
 
 Aturan:
