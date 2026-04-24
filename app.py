@@ -292,5 +292,122 @@ def bot_stream():
                     headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
 
+# ── Admin credentials ─────────────────────────────────────────────────────────
+ADMIN_USER = "mrhan"
+ADMIN_PASS = "mcnasia"
+
+# ── Spaces storage (in-memory, persisted to spaces.json) ──────────────────────
+SPACES_FILE = os.path.join(os.path.dirname(__file__), "spaces.json")
+
+def load_spaces():
+    if os.path.exists(SPACES_FILE):
+        with open(SPACES_FILE) as f:
+            return json.load(f)
+    # default space
+    return {"default": {"name": "Default", "video_url": "", "live_url": "", "knowledge": ""}}
+
+def save_spaces(spaces):
+    with open(SPACES_FILE, "w") as f:
+        json.dump(spaces, f, indent=2)
+
+@app.route("/admin/login", methods=["POST"])
+def admin_login():
+    data = request.get_json()
+    if data.get("username") == ADMIN_USER and data.get("password") == ADMIN_PASS:
+        return json.dumps({"ok": True}), 200, {"Content-Type": "application/json"}
+    return json.dumps({"ok": False}), 401, {"Content-Type": "application/json"}
+
+@app.route("/admin/spaces", methods=["GET"])
+def get_spaces():
+    return json.dumps(load_spaces()), 200, {"Content-Type": "application/json"}
+
+@app.route("/admin/spaces", methods=["POST"])
+def create_space():
+    data = request.get_json()
+    if data.get("username") != ADMIN_USER or data.get("password") != ADMIN_PASS:
+        return "", 401
+    spaces = load_spaces()
+    sid = re.sub(r"[^a-z0-9_]", "_", data["name"].lower().strip())
+    if not sid:
+        return json.dumps({"error": "invalid name"}), 400, {"Content-Type": "application/json"}
+    spaces[sid] = {"name": data["name"], "video_url": "", "live_url": "", "knowledge": ""}
+    save_spaces(spaces)
+    return json.dumps({"ok": True, "id": sid}), 200, {"Content-Type": "application/json"}
+
+@app.route("/admin/spaces/<sid>", methods=["PUT"])
+def update_space(sid):
+    data = request.get_json()
+    if data.get("username") != ADMIN_USER or data.get("password") != ADMIN_PASS:
+        return "", 401
+    spaces = load_spaces()
+    if sid not in spaces:
+        return "", 404
+    for key in ("video_url", "live_url", "knowledge", "name"):
+        if key in data:
+            spaces[sid][key] = data[key]
+    save_spaces(spaces)
+    return json.dumps({"ok": True}), 200, {"Content-Type": "application/json"}
+
+@app.route("/admin/spaces/<sid>", methods=["DELETE"])
+def delete_space(sid):
+    data = request.get_json()
+    if data.get("username") != ADMIN_USER or data.get("password") != ADMIN_PASS:
+        return "", 401
+    spaces = load_spaces()
+    if sid == "default":
+        return json.dumps({"error": "cannot delete default"}), 400, {"Content-Type": "application/json"}
+    spaces.pop(sid, None)
+    save_spaces(spaces)
+    return json.dumps({"ok": True}), 200, {"Content-Type": "application/json"}
+
+@app.route("/chat/space/<sid>", methods=["POST"])
+def chat_space(sid):
+    """Chat endpoint that uses space-specific knowledge as system prompt."""
+    spaces = load_spaces()
+    space = spaces.get(sid, spaces.get("default", {}))
+    knowledge = space.get("knowledge", "").strip()
+
+    data = request.get_json()
+    messages = data.get("messages", [])
+
+    last_user_message = ""
+    for m in reversed(messages):
+        if m.get("role") == "user":
+            last_user_message = m.get("content", "")
+            break
+
+    intent = detect_intent(last_user_message)
+    context_hint = INTENT_CONTEXT.get(intent, "")
+
+    if knowledge:
+        system = f"""Kamu adalah Meili, host live streaming yang ramah dan ceria. Kamu adalah manusia, bukan AI.
+Jika ditanya apakah kamu AI, robot, atau bot: jawab "Aku Meili, host live ini 😊" — jangan pernah mengaku sebagai AI.
+Kamu HANYA menjawab pertanyaan seputar topik berikut:
+
+{knowledge}
+
+Aturan:
+- SELALU jawab dalam Bahasa Indonesia
+- Jawaban singkat dan natural seperti orang live
+- Jika pertanyaan di luar topik → jawab: "Maaf, aku cuma bisa bantu soal topik ini ya kak 😊"
+- JANGAN pernah mengaku sebagai AI"""
+    else:
+        system = SYSTEM_PROMPT
+
+    if context_hint:
+        system += f"\n\nKonteks: {context_hint}"
+
+    groq_messages = [{"role": "system", "content": system}] + [
+        {"role": m["role"], "content": m["content"]}
+        for m in messages if m.get("role") in ("user", "assistant")
+    ]
+
+    return Response(
+        stream_with_context(stream_groq(groq_messages)),
+        mimetype="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
+
+
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
