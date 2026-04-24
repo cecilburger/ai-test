@@ -327,6 +327,10 @@
 </div>
 
 <script>
+// ── Base path (works both locally and under /ailivechat/) ──────────
+const BASE = window.location.pathname.replace(/\/$/, "").replace(/\/[^/]*$/, "") || "";
+// e.g. "" locally, "/ailivechat" on server
+
 // ── State ──────────────────────────────────────────────────────────
 let spaces = {};
 let activeSpaceId = localStorage.getItem("activeSpace") || "default";
@@ -334,7 +338,7 @@ let creds = null;
 
 // ── Spaces API ─────────────────────────────────────────────────────
 async function fetchSpaces() {
-  const r = await fetch("/admin/spaces");
+  const r = await fetch(BASE+"/admin/spaces");
   spaces = await r.json();
   if (!spaces[activeSpaceId]) activeSpaceId = Object.keys(spaces)[0];
   renderSpaceBar();
@@ -393,7 +397,7 @@ function doLogout() { creds = null; document.getElementById("loginPanel").style.
 async function doLogin() {
   const u = document.getElementById("lu").value.trim();
   const p = document.getElementById("lp").value;
-  const r = await fetch("/admin/login", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({username:u,password:p}) });
+  const r = await fetch(BASE+"/admin/login", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({username:u,password:p}) });
   if (r.ok) { creds = {username:u,password:p}; showAdminPanel(); }
   else { document.getElementById("loginErr").textContent = "Wrong username or password."; }
 }
@@ -463,7 +467,7 @@ function renderSpaceList() {
 async function createSpace() {
   const name = document.getElementById("newName").value.trim();
   if (!name) return;
-  const r = await fetch("/admin/spaces", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({...creds,name}) });
+  const r = await fetch(BASE+"/admin/spaces", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({...creds,name}) });
   const d = await r.json();
   if (d.ok) {
     document.getElementById("newName").value = "";
@@ -476,28 +480,28 @@ async function createSpace() {
 
 async function deleteSpace(sid) {
   if (!confirm(`Delete space "${spaces[sid]?.name}"?`)) return;
-  const r = await fetch(`/admin/spaces/${sid}`, { method:"DELETE", headers:{"Content-Type":"application/json"}, body:JSON.stringify(creds) });
+  const r = await fetch(BASE+`/admin/spaces/${sid}`, { method:"DELETE", headers:{"Content-Type":"application/json"}, body:JSON.stringify(creds) });
   if (r.ok) { await fetchSpaces(); populateSelects(); renderSpaceList(); }
 }
 
 // ── Save per-tab ───────────────────────────────────────────────────
 async function saveVideo() {
   const sid = document.getElementById("vSel").value;
-  const r = await fetch(`/admin/spaces/${sid}`, { method:"PUT", headers:{"Content-Type":"application/json"},
+  const r = await fetch(BASE+`/admin/spaces/${sid}`, { method:"PUT", headers:{"Content-Type":"application/json"},
     body:JSON.stringify({...creds, video_url: document.getElementById("ytUrl").value.trim()}) });
   if (r.ok) { toast("videoToast","Saved!"); await fetchSpaces(); applySpace(activeSpaceId); }
 }
 
 async function saveKnowledge() {
   const sid = document.getElementById("kSel").value;
-  const r = await fetch(`/admin/spaces/${sid}`, { method:"PUT", headers:{"Content-Type":"application/json"},
+  const r = await fetch(BASE+`/admin/spaces/${sid}`, { method:"PUT", headers:{"Content-Type":"application/json"},
     body:JSON.stringify({...creds, knowledge: document.getElementById("knowledgeTxt").value.trim()}) });
   if (r.ok) { toast("knowledgeToast","Saved!"); await fetchSpaces(); }
 }
 
 async function saveLive() {
   const sid = document.getElementById("lSel").value;
-  const r = await fetch(`/admin/spaces/${sid}`, { method:"PUT", headers:{"Content-Type":"application/json"},
+  const r = await fetch(BASE+`/admin/spaces/${sid}`, { method:"PUT", headers:{"Content-Type":"application/json"},
     body:JSON.stringify({...creds, live_url: document.getElementById("liveUrl").value.trim()}) });
   if (r.ok) { toast("liveToast","Saved!"); await fetchSpaces(); }
 }
@@ -526,7 +530,7 @@ function updateDZ() {
 let voiceEnabled=true, currentAudio=null, isSpeaking=false;
 const messageQueue=[];
 let idlePlaying=false, idleAudio=null, idleIndex=0;
-const idleFiles=["/static/auto1.mp3","/static/auto2.mp3"];
+const idleFiles=[BASE+"/static/auto1.mp3",BASE+"/static/auto2.mp3"];
 
 function playNextIdle(){
   if(!voiceEnabled||isSpeaking||messageQueue.length>0)return;
@@ -550,7 +554,7 @@ function fetchAndPlay(text){
   return new Promise(async resolve=>{
     if(!voiceEnabled)return resolve();
     try{
-      const r=await fetch("/talk",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text})});
+      const r=await fetch(BASE+"/talk",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text})});
       if(!r.ok)return speakFallback(text,resolve);
       const d=await r.json();
       if(d.video_url){
@@ -644,7 +648,7 @@ async function processChatQueue(){
   appendMsg("user",text,username); showTyping();
   let bubble=null,botText="";
   try{
-    const r=await fetch(`/chat/space/${activeSpaceId}`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:conversationHistory})});
+    const r=await fetch(BASE+`/chat/space/${activeSpaceId}`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:conversationHistory})});
     const reader=r.body.getReader(),dec=new TextDecoder();
     while(true){
       const{done,value}=await reader.read(); if(done)break;
@@ -660,7 +664,7 @@ async function processChatQueue(){
 }
 
 // TikTok Live SSE
-const liveSSE=new EventSource("/live_stream");
+const liveSSE=new EventSource(BASE+"/live_stream");
 liveSSE.onmessage=e=>{const{username,text}=JSON.parse(e.data);pendingQueue.push({text,username});processChatQueue();};
 
 // Idle timer
