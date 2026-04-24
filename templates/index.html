@@ -60,6 +60,12 @@
     .voice-btn{position:fixed;bottom:16px;left:16px;width:34px;height:34px;border-radius:50%;background:rgba(99,102,241,.2);border:1px solid rgba(99,102,241,.4);color:#fff;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:100;transition:all .2s}
     .voice-btn:hover{background:rgba(99,102,241,.4)}
     .voice-btn.muted{opacity:.3}
+    .bot-toggle{position:fixed;bottom:16px;left:58px;display:flex;align-items:center;gap:7px;z-index:100;background:rgba(12,12,18,.9);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:5px 12px 5px 8px;cursor:pointer;transition:all .2s;user-select:none}
+    .bot-toggle:hover{border-color:rgba(99,102,241,.4)}
+    .bot-toggle .dot{width:10px;height:10px;border-radius:50%;background:#4ade80;box-shadow:0 0 6px rgba(74,222,128,.7);transition:all .3s;flex-shrink:0}
+    .bot-toggle.off .dot{background:#ef4444;box-shadow:0 0 6px rgba(239,68,68,.7)}
+    .bot-toggle .label{font-size:11px;font-weight:600;color:rgba(255,255,255,.6);transition:all .2s}
+    .bot-toggle.off .label{color:rgba(255,255,255,.35)}
 
     /* ── ADMIN MODAL ── */
     .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;align-items:flex-start;justify-content:flex-end;padding:12px 12px 0 0}
@@ -162,6 +168,10 @@
 </div>
 
 <button class="voice-btn" id="voiceBtn" onclick="toggleVoice()">🔊</button>
+<div class="bot-toggle" id="botToggle" onclick="toggleBot()">
+  <div class="dot"></div>
+  <span class="label">Bot ON</span>
+</div>
 <button class="gear-btn" onclick="openAdmin()" title="Admin Settings">⚙️</button>
 
 <!-- ADMIN MODAL -->
@@ -703,6 +713,24 @@ function enqueueSpeak(_,__,answer){
 const messagesEl=document.getElementById("messages");
 const inputEl=document.getElementById("userInput");
 let conversationHistory=[],isProcessingChat=false,pendingQueue=[];
+let botEnabled=true;
+
+function toggleBot(){
+  botEnabled=!botEnabled;
+  const el=document.getElementById("botToggle");
+  el.classList.toggle("off",!botEnabled);
+  el.querySelector(".label").textContent=botEnabled?"Bot ON":"Bot OFF";
+  if(!botEnabled){
+    // stop everything
+    pendingQueue.length=0;
+    stopIdleLoop();
+    if(currentAudio){currentAudio.pause();currentAudio=null;}
+    isSpeaking=false;
+    isProcessingChat=false;
+  } else {
+    resetIdleTimer();
+  }
+}
 
 function autoResize(el){el.style.height="auto";el.style.height=Math.min(el.scrollHeight,80)+"px";}
 function handleKey(e){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendMessage();}}
@@ -734,7 +762,7 @@ function sendMessage(){
 }
 
 async function processChatQueue(){
-  if(isProcessingChat||pendingQueue.length===0)return;
+  if(!botEnabled||isProcessingChat||pendingQueue.length===0)return;
   isProcessingChat=true;
   const{text,username}=pendingQueue.shift();
   conversationHistory.push({role:"user",content:text});
@@ -758,7 +786,12 @@ async function processChatQueue(){
 
 // TikTok Live SSE
 const liveSSE=new EventSource(BASE+"/live_stream");
-liveSSE.onmessage=e=>{const{username,text}=JSON.parse(e.data);pendingQueue.push({text,username});processChatQueue();};
+liveSSE.onmessage=e=>{
+  if(!botEnabled)return;
+  const{username,text}=JSON.parse(e.data);
+  pendingQueue.push({text,username});
+  processChatQueue();
+};
 
 // Idle timer
 let idleTimer=null;
