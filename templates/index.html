@@ -196,6 +196,10 @@
     <div id="adminPanel" style="display:none;flex-direction:column;flex:1;overflow:hidden">
       <div class="panel-head">
         <h2>⚙️ Admin Panel</h2>
+        <div class="bot-toggle" id="botTogglePanel" onclick="toggleBot()" style="position:static;background:transparent;border-color:rgba(255,255,255,.12);padding:4px 10px 4px 7px;margin-right:6px">
+          <div class="dot"></div>
+          <span class="label">Bot ON</span>
+        </div>
         <button class="btn btn-ghost" onclick="doLogout()" style="font-size:11px;padding:5px 12px;margin-right:6px">Logout</button>
         <button class="close" onclick="closeAdmin()">✕</button>
       </div>
@@ -717,11 +721,13 @@ let botEnabled=true;
 
 function toggleBot(){
   botEnabled=!botEnabled;
-  const el=document.getElementById("botToggle");
-  el.classList.toggle("off",!botEnabled);
-  el.querySelector(".label").textContent=botEnabled?"Bot ON":"Bot OFF";
+  const els=[document.getElementById("botToggle"),document.getElementById("botTogglePanel")];
+  els.forEach(el=>{
+    if(!el)return;
+    el.classList.toggle("off",!botEnabled);
+    el.querySelector(".label").textContent=botEnabled?"Bot ON":"Bot OFF";
+  });
   if(!botEnabled){
-    // stop everything
     pendingQueue.length=0;
     stopIdleLoop();
     if(currentAudio){currentAudio.pause();currentAudio=null;}
