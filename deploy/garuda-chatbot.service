@@ -1,12 +1,12 @@
 [Unit]
-Description=Garuda Food Chatbot
+Description=AI Live Chat
 After=network.target
 
 [Service]
 User=root
-WorkingDirectory=/var/www/garuda-chatbot
-EnvironmentFile=-/var/www/garuda-chatbot/.env
-ExecStart=/var/www/garuda-chatbot/venv/bin/gunicorn --workers 2 --bind 127.0.0.1:5000 app:app
+WorkingDirectory=/var/www/ailivechat
+EnvironmentFile=-/var/www/ailivechat/.env
+ExecStart=/var/www/ailivechat/venv/bin/gunicorn --workers 2 --bind 127.0.0.1:5100 "wsgi:application"
 Restart=always
 RestartSec=5
 
