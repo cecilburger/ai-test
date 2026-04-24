@@ -328,8 +328,13 @@
 
 <script>
 // ── Base path (works both locally and under /ailivechat/) ──────────
-const BASE = window.location.pathname.replace(/\/$/, "").replace(/\/[^/]*$/, "") || "";
-// e.g. "" locally, "/ailivechat" on server
+const BASE = (()=>{
+  const p = window.location.pathname;
+  // If served at root "/" → BASE = ""
+  // If served at "/ailivechat/" → BASE = "/ailivechat"
+  const m = p.match(/^(\/[^/]+)\//);
+  return (m && m[1] !== "") ? m[1] : "";
+})();
 
 // ── State ──────────────────────────────────────────────────────────
 let spaces = {};
