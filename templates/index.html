@@ -717,10 +717,11 @@ function enqueueSpeak(_,__,answer){
 const messagesEl=document.getElementById("messages");
 const inputEl=document.getElementById("userInput");
 let conversationHistory=[],isProcessingChat=false,pendingQueue=[];
-let botEnabled=true;
+let botEnabled=localStorage.getItem("botEnabled")!=="false";
 
 function toggleBot(){
   botEnabled=!botEnabled;
+  localStorage.setItem("botEnabled", botEnabled);
   const els=[document.getElementById("botToggle"),document.getElementById("botTogglePanel")];
   els.forEach(el=>{
     if(!el)return;
@@ -738,6 +739,16 @@ function toggleBot(){
   }
 }
 
+// Apply saved state on load
+if(!botEnabled){
+  document.addEventListener("DOMContentLoaded",()=>{
+    [document.getElementById("botToggle"),document.getElementById("botTogglePanel")].forEach(el=>{
+      if(!el)return;
+      el.classList.add("off");
+      el.querySelector(".label").textContent="Bot OFF";
+    });
+  });
+}
 function autoResize(el){el.style.height="auto";el.style.height=Math.min(el.scrollHeight,80)+"px";}
 function handleKey(e){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendMessage();}}
 function sendSug(btn){inputEl.value=btn.textContent;sendMessage();}
@@ -808,6 +819,14 @@ document.addEventListener("click",function si(){startIdleLoop();document.removeE
 // Init
 fetchSpaces();
 refreshIdleFiles();
+// Apply saved bot state
+if(!botEnabled){
+  [document.getElementById("botToggle"),document.getElementById("botTogglePanel")].forEach(el=>{
+    if(!el)return;
+    el.classList.add("off");
+    el.querySelector(".label").textContent="Bot OFF";
+  });
+}
 </script>
 </body>
 </html>
