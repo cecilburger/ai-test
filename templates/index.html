@@ -194,6 +194,7 @@
         <button class="atab" onclick="showTab('video',this)">Video</button>
         <button class="atab" onclick="showTab('knowledge',this)">Knowledge</button>
         <button class="atab" onclick="showTab('live',this)">Live Link</button>
+        <button class="atab" onclick="showTab('sounds',this)">🎵 Sounds</button>
         <button class="atab" onclick="showTab('guide',this)">📖 Panduan</button>
       </div>
       <div class="admin-body">
@@ -251,6 +252,26 @@
           </div>
           <div class="btn-row"><button class="btn btn-primary" onclick="saveLive()">Save Live Link</button></div>
           <div class="toast ok" id="liveToast"></div>
+        </div>
+
+        <!-- TAB: SOUNDS -->
+        <div class="tab-pane" id="tab-sounds">
+          <div class="field"><label>Select Space</label>
+            <select id="sSel" onchange="syncSelects('sSel');loadSoundsTab()"></select>
+          </div>
+          <div class="field">
+            <label>Idle Loop Sounds (max 10 MP3)</label>
+            <div style="color:rgba(255,255,255,.35);font-size:11px;margin-bottom:10px">
+              Suara ini akan diputar otomatis saat tidak ada komentar masuk. Upload file MP3, max 10 file per space.
+            </div>
+            <div id="soundList" style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px"></div>
+            <label class="btn btn-ghost" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px">
+              ⬆️ Upload MP3
+              <input type="file" id="soundFile" accept=".mp3" style="display:none" onchange="uploadSound()"/>
+            </label>
+            <div class="hint" style="margin-top:8px">Diputar berurutan (loop). Kosong = pakai auto1.mp3 & auto2.mp3 bawaan.</div>
+          </div>
+          <div class="toast ok" id="soundToast"></div>
         </div>
 
         <!-- TAB: PANDUAN -->
@@ -367,6 +388,7 @@ function switchSpace(id) {
   localStorage.setItem("activeSpace", id);
   renderSpaceBar();
   applySpace(id);
+  refreshIdleFiles();
   conversationHistory = [];
   document.getElementById("messages").innerHTML = `
     <div class="welcome">
@@ -423,19 +445,19 @@ function showTab(name, btn) {
 
 // ── Selects (keep in sync) ─────────────────────────────────────────
 function populateSelects() {
-  ["vSel","kSel","lSel"].forEach(id => {
+  ["vSel","kSel","lSel","sSel"].forEach(id => {
     const sel = document.getElementById(id);
     const cur = sel.value || activeSpaceId;
     sel.innerHTML = Object.entries(spaces).map(([id,sp]) =>
       `<option value="${id}" ${id===cur?"selected":""}>${sp.name}</option>`).join("");
   });
-  loadVideoTab(); loadKnowledgeTab(); loadLiveTab();
+  loadVideoTab(); loadKnowledgeTab(); loadLiveTab(); loadSoundsTab();
 }
 
 function syncSelects(changedId) {
   const val = document.getElementById(changedId).value;
-  ["vSel","kSel","lSel"].forEach(id => { if(id!==changedId) document.getElementById(id).value = val; });
-  loadVideoTab(); loadKnowledgeTab(); loadLiveTab();
+  ["vSel","kSel","lSel","sSel"].forEach(id => { if(id!==changedId) document.getElementById(id).value = val; });
+  loadVideoTab(); loadKnowledgeTab(); loadLiveTab(); loadSoundsTab();
 }
 
 function loadVideoTab() {
@@ -531,11 +553,76 @@ function updateDZ() {
   dz.textContent = url ? "🎬 " + url : "🎬 Drop a YouTube link here, or paste below";
 }
 
+// ── Sounds tab ─────────────────────────────────────────────────────
+async function loadSoundsTab() {
+  const sid = document.getElementById("sSel").value;
+  const r = await fetch(BASE+`/admin/spaces/${sid}/sounds`);
+  const files = await r.json();
+  const el = document.getElementById("soundList");
+  if (!files.length) {
+    el.innerHTML = `<div style="font-size:12px;color:rgba(255,255,255,.25);padding:8px 0">Belum ada sound. Upload MP3 di bawah.</div>`;
+    return;
+  }
+  el.innerHTML = files.map(f => `
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:10px">
+      <span style="font-size:13px">🎵</span>
+      <span style="flex:1;font-size:12px;color:rgba(255,255,255,.75);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f}</span>
+      <audio controls style="height:24px;width:120px;opacity:.7" src="${BASE}/static/sounds/${sid}/${f}"></audio>
+      <button onclick="deleteSound('${sid}','${f}')" style="background:none;border:none;color:rgba(239,68,68,.6);cursor:pointer;font-size:14px;padding:2px 6px;border-radius:6px" title="Hapus">🗑</button>
+    </div>`).join("");
+}
+
+async function uploadSound() {
+  const sid = document.getElementById("sSel").value;
+  const file = document.getElementById("soundFile").files[0];
+  if (!file) return;
+  const fd = new FormData();
+  fd.append("username", creds.username);
+  fd.append("password", creds.password);
+  fd.append("file", file);
+  const r = await fetch(BASE+`/admin/spaces/${sid}/upload_sound`, { method:"POST", body:fd });
+  const d = await r.json();
+  if (d.ok) {
+    toast("soundToast", `"${d.filename}" uploaded!`);
+    document.getElementById("soundFile").value = "";
+    await loadSoundsTab();
+    // refresh idle files if this is the active space
+    if (sid === activeSpaceId) await refreshIdleFiles();
+  } else {
+    toast("soundToast", d.error || "Upload failed");
+  }
+}
+
+async function deleteSound(sid, filename) {
+  const r = await fetch(BASE+`/admin/spaces/${sid}/delete_sound`, {
+    method:"POST", headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({...creds, filename})
+  });
+  if (r.ok) {
+    toast("soundToast", "Deleted!");
+    await loadSoundsTab();
+    if (sid === activeSpaceId) await refreshIdleFiles();
+  }
+}
+
+async function refreshIdleFiles() {
+  const r = await fetch(BASE+`/admin/spaces/${activeSpaceId}/sounds`);
+  const files = await r.json();
+  if (files.length) {
+    idleFiles.length = 0;
+    files.forEach(f => idleFiles.push(BASE+`/static/sounds/${activeSpaceId}/${f}`));
+  } else {
+    idleFiles.length = 0;
+    idleFiles.push(BASE+"/static/auto1.mp3", BASE+"/static/auto2.mp3");
+  }
+  idleIndex = 0;
+}
+
 // ── Voice ──────────────────────────────────────────────────────────
 let voiceEnabled=true, currentAudio=null, isSpeaking=false;
 const messageQueue=[];
 let idlePlaying=false, idleAudio=null, idleIndex=0;
-const idleFiles=[BASE+"/static/auto1.mp3",BASE+"/static/auto2.mp3"];
+let idleFiles=[BASE+"/static/auto1.mp3",BASE+"/static/auto2.mp3"];
 
 function playNextIdle(){
   if(!voiceEnabled||isSpeaking||messageQueue.length>0)return;
@@ -680,6 +767,7 @@ document.addEventListener("click",function si(){startIdleLoop();document.removeE
 
 // Init
 fetchSpaces();
+refreshIdleFiles();
 </script>
 </body>
 </html>

@@ -362,6 +362,52 @@ def delete_space(sid):
     save_spaces(spaces)
     return json.dumps({"ok": True}), 200, {"Content-Type": "application/json"}
 
+
+SOUNDS_DIR = os.path.join(os.path.dirname(__file__), "static", "sounds")
+os.makedirs(SOUNDS_DIR, exist_ok=True)
+
+@app.route("/admin/spaces/<sid>/sounds", methods=["GET"])
+def get_sounds(sid):
+    folder = os.path.join(SOUNDS_DIR, sid)
+    if not os.path.exists(folder):
+        return json.dumps([]), 200, {"Content-Type": "application/json"}
+    files = sorted([f for f in os.listdir(folder) if f.endswith(".mp3")])
+    return json.dumps(files), 200, {"Content-Type": "application/json"}
+
+@app.route("/admin/spaces/<sid>/upload_sound", methods=["POST"])
+def upload_sound(sid):
+    username = request.form.get("username")
+    password = request.form.get("password")
+    if username != ADMIN_USER or password != ADMIN_PASS:
+        return "", 401
+    folder = os.path.join(SOUNDS_DIR, sid)
+    os.makedirs(folder, exist_ok=True)
+    existing = [f for f in os.listdir(folder) if f.endswith(".mp3")]
+    if len(existing) >= 10:
+        return json.dumps({"error": "Max 10 sounds per space"}), 400, {"Content-Type": "application/json"}
+    f = request.files.get("file")
+    if not f or not f.filename.endswith(".mp3"):
+        return json.dumps({"error": "MP3 only"}), 400, {"Content-Type": "application/json"}
+    safe_name = re.sub(r"[^a-zA-Z0-9_\-\.]", "_", f.filename)
+    f.save(os.path.join(folder, safe_name))
+    return json.dumps({"ok": True, "filename": safe_name}), 200, {"Content-Type": "application/json"}
+
+@app.route("/admin/spaces/<sid>/delete_sound", methods=["POST"])
+def delete_sound(sid):
+    data = request.get_json()
+    if data.get("username") != ADMIN_USER or data.get("password") != ADMIN_PASS:
+        return "", 401
+    filename = re.sub(r"[^a-zA-Z0-9_\-\.]", "_", data.get("filename", ""))
+    path = os.path.join(SOUNDS_DIR, sid, filename)
+    if os.path.exists(path):
+        os.remove(path)
+    return json.dumps({"ok": True}), 200, {"Content-Type": "application/json"}
+
+@app.route("/static/sounds/<sid>/<filename>")
+def serve_sound(sid, filename):
+    folder = os.path.join(SOUNDS_DIR, sid)
+    return send_from_directory(folder, filename)
+
 @app.route("/chat/space/<sid>", methods=["POST"])
 def chat_space(sid):
     """Chat endpoint that uses space-specific knowledge as system prompt."""
