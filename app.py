@@ -106,12 +106,14 @@ def stream_groq(messages):
 
 
 def process_comment_server_side(username, text, space_id="default"):
-    """Generate bot response on server, broadcast to all clients. Called in background thread."""
+    """Generate bot response on server, broadcast to all clients."""
     global bot_is_processing
     with bot_processing_lock:
         if bot_is_processing:
-            return  # already processing, drop this comment
+            print(f"[Processor] Busy, dropping: {text[:30]}")
+            return
         bot_is_processing = True
+    print(f"[Processor] Processing: [{username}] {text[:50]}")
     try:
         spaces = load_spaces()
         space = spaces.get(space_id, spaces.get("default", {}))
@@ -249,9 +251,13 @@ def live_comment():
     comment_queue.append({"username": username, "text": text})
     if len(comment_queue) > MAX_QUEUE:
         del comment_queue[:-MAX_QUEUE]
-    # Process on server in background thread — only one at a time
-    t = threading.Thread(target=process_comment_server_side, args=(username, text, space_id), daemon=True)
-    t.start()
+    # Use gevent spawn (compatible with gevent workers)
+    try:
+        from gevent import spawn
+        spawn(process_comment_server_side, username, text, space_id)
+    except ImportError:
+        t = threading.Thread(target=process_comment_server_side, args=(username, text, space_id), daemon=True)
+        t.start()
     return "", 200
 
 
