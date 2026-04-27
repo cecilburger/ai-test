@@ -700,16 +700,21 @@ function playAudio(b64,resolve){
 async function processQueue(){
   if(isSpeaking||messageQueue.length===0)return;
   stopIdleLoop(); isSpeaking=true;
-  const{answer}=messageQueue.shift();
-  await fetchAndPlay(answer);
+  const{answer,preAudio}=messageQueue.shift();
+  if(preAudio){
+    // use server-generated audio directly, no need to call /talk
+    await new Promise(resolve=>playAudio(preAudio,resolve));
+  } else {
+    await fetchAndPlay(answer);
+  }
   isSpeaking=false;
   messageQueue.length>0?processQueue():resetIdleTimer();
 }
 
-function enqueueSpeak(_,__,answer){
+function enqueueSpeak(_,__,answer,preAudio){
   if(!voiceEnabled)return;
-  messageQueue.push({answer});
-  stopIdleLoop(); // cut idle immediately
+  messageQueue.push({answer,preAudio});
+  stopIdleLoop();
   processQueue();
 }
 
@@ -800,16 +805,21 @@ async function processChatQueue(){
   }catch(e){removeTyping();appendMsg("bot","Maaf, ada gangguan. Coba lagi ya! 😊");conversationHistory.pop();}
   finally{isProcessingChat=false;processChatQueue();}
 }
-
-// TikTok Live SSE — only keep latest comment, drop queue if busy
+// TikTok Live SSE — just display incoming comments, server handles response
 const liveSSE=new EventSource(BASE+"/live_stream");
 liveSSE.onmessage=e=>{
   if(!botEnabled)return;
   const{username,text}=JSON.parse(e.data);
-  // clear any pending live comments, only process the freshest one
-  pendingQueue.length=0;
-  pendingQueue.push({text,username});
-  processChatQueue();
+  appendMsg("user",text,username);
+};
+
+// Bot broadcast SSE — server sends ONE response to ALL clients
+const botSSE=new EventSource(BASE+"/bot_broadcast");
+botSSE.onmessage=e=>{
+  if(!botEnabled)return;
+  const d=JSON.parse(e.data);
+  appendMsg("bot",d.bot_text);
+  if(d.audio) enqueueSpeak("","",d.bot_text,d.audio);
 };
 
 // Idle timer

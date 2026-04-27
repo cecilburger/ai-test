@@ -2,6 +2,7 @@ import json
 import os
 import re
 import base64
+import threading
 import requests as http_requests
 from flask import Flask, render_template, request, Response, stream_with_context, send_from_directory
 from groq import Groq
@@ -16,9 +17,13 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 groq_client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 eleven_client = ElevenLabs(api_key=os.environ.get("ELEVENLABS_API_KEY"))
-comment_queue = []  # shared queue for TikTok Live comments
-MAX_QUEUE = 200  # keep only last 200 comments
-bot_audio_queue = []  # audio pushed to OBS view
+
+comment_queue = []       # incoming TikTok comments
+MAX_QUEUE = 200
+bot_response_queue = []  # processed bot responses broadcast to ALL clients
+bot_audio_queue = []     # OBS stream
+bot_processing_lock = threading.Lock()
+bot_is_processing = False
 
 ELEVENLABS_VOICE_ID = os.environ.get("ELEVENLABS_VOICE_ID", "fUesUKVrbYRcEnWoLXet")
 DID_API_KEY = os.environ.get("DID_API_KEY", "")
@@ -100,6 +105,94 @@ def stream_groq(messages):
     yield "data: [DONE]\n\n"
 
 
+def process_comment_server_side(username, text, space_id="default"):
+    """Generate bot response on server, broadcast to all clients. Called in background thread."""
+    global bot_is_processing
+    with bot_processing_lock:
+        if bot_is_processing:
+            return  # already processing, drop this comment
+        bot_is_processing = True
+    try:
+        spaces = load_spaces()
+        space = spaces.get(space_id, spaces.get("default", {}))
+        knowledge = space.get("knowledge", "").strip()
+        intent = detect_intent(text)
+        context_hint = INTENT_CONTEXT.get(intent, "")
+        if knowledge:
+            system = f"""Kamu adalah Meili, host live streaming yang ramah dan ceria. Kamu adalah manusia, bukan AI.
+Jika ditanya apakah kamu AI, robot, atau bot: jawab "Aku Meili, host live ini 😊" — jangan pernah mengaku sebagai AI.
+Kamu HANYA menjawab pertanyaan seputar topik berikut:\n\n{knowledge}\n\nAturan:
+- SELALU jawab dalam Bahasa Indonesia
+- Jawaban singkat dan natural seperti orang live
+- Jika pertanyaan di luar topik → jawab: "Maaf, aku cuma bisa bantu soal topik ini ya kak 😊"
+- JANGAN pernah mengaku sebagai AI"""
+        else:
+            system = SYSTEM_PROMPT
+        if context_hint:
+            system += f"\n\nKonteks: {context_hint}"
+
+        # Generate LLM response (non-streaming for server-side processing)
+        completion = groq_client.chat.completions.create(
+            model="llama-3.1-8b-instant",
+            messages=[
+                {"role": "system", "content": system},
+                {"role": "user", "content": text}
+            ],
+            max_tokens=150,
+            temperature=0.7,
+            stream=False,
+        )
+        bot_text = completion.choices[0].message.content or ""
+        if not bot_text.strip():
+            return
+
+        # Generate TTS audio
+        audio_b64 = ""
+        try:
+            eleven_response = eleven_client.text_to_speech.convert_with_timestamps(
+                voice_id=ELEVENLABS_VOICE_ID,
+                text=strip_emoji(bot_text),
+                model_id="eleven_flash_v2_5",
+                language_code="id",
+                voice_settings={"stability": 0.40, "similarity_boost": 0.80, "style": 0.50, "use_speaker_boost": True},
+            )
+            audio_b64 = eleven_response.audio_base_64 or ""
+        except Exception as e:
+            print(f"[TTS] {e}")
+
+        # Broadcast to all connected clients
+        payload = {"username": username, "text": text, "bot_text": bot_text, "audio": audio_b64}
+        bot_response_queue.append(payload)
+        bot_audio_queue.append({"audio": audio_b64, "video_url": None})
+        if len(bot_response_queue) > 50:
+            del bot_response_queue[:-50]
+
+    except Exception as e:
+        print(f"[Processor] {e}")
+    finally:
+        with bot_processing_lock:
+            bot_is_processing = False
+
+
+@app.route("/bot_broadcast")
+def bot_broadcast():
+    """SSE — all browser clients subscribe. Server pushes ONE response to everyone."""
+    def event_stream():
+        last = len(bot_response_queue)
+        while True:
+            if len(bot_response_queue) > last:
+                item = bot_response_queue[last]
+                last += 1
+                import time as _t
+                yield f"data: {json.dumps(item)}\n\n"
+            else:
+                import time as _t
+                _t.sleep(0.3)
+    return Response(stream_with_context(event_stream()),
+                    mimetype="text/event-stream",
+                    headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+
+
 @app.route("/static/<path:filename>")
 def static_files(filename):
     return send_from_directory("static", filename)
@@ -150,12 +243,15 @@ def live_comment():
     data = request.get_json()
     username = data.get("username", "Kak")
     text = data.get("text", "").strip()
+    space_id = data.get("space_id", "default")
     if not text:
         return "", 400
     comment_queue.append({"username": username, "text": text})
-    # trim to last MAX_QUEUE items
     if len(comment_queue) > MAX_QUEUE:
         del comment_queue[:-MAX_QUEUE]
+    # Process on server in background thread — only one at a time
+    t = threading.Thread(target=process_comment_server_side, args=(username, text, space_id), daemon=True)
+    t.start()
     return "", 200
 
 
