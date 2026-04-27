@@ -17,6 +17,7 @@ app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 groq_client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 eleven_client = ElevenLabs(api_key=os.environ.get("ELEVENLABS_API_KEY"))
 comment_queue = []  # shared queue for TikTok Live comments
+MAX_QUEUE = 200  # keep only last 200 comments
 bot_audio_queue = []  # audio pushed to OBS view
 
 ELEVENLABS_VOICE_ID = os.environ.get("ELEVENLABS_VOICE_ID", "fUesUKVrbYRcEnWoLXet")
@@ -146,21 +147,24 @@ def chat():
 
 @app.route("/live_comment", methods=["POST"])
 def live_comment():
-    """Receives comments from TikTok Live connector and pushes to frontend via SSE."""
     data = request.get_json()
     username = data.get("username", "Kak")
     text = data.get("text", "").strip()
     if not text:
         return "", 400
     comment_queue.append({"username": username, "text": text})
+    # trim to last MAX_QUEUE items
+    if len(comment_queue) > MAX_QUEUE:
+        del comment_queue[:-MAX_QUEUE]
     return "", 200
 
 
 @app.route("/live_stream")
 def live_stream():
-    """SSE endpoint — frontend subscribes to get live comments pushed in real-time."""
+    """SSE — new connections start from current tail, never replay old comments."""
     def event_stream():
-        last = 0
+        # start from the END of the queue so we only get new comments
+        last = len(comment_queue)
         while True:
             if len(comment_queue) > last:
                 item = comment_queue[last]
