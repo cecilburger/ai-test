@@ -59,9 +59,12 @@ async def connect_to(username):
     while True:
         print(f"[Connector] Connecting to @{username}...")
         client = TikTokLiveClient(unique_id=username)
+        connected_at = None  # set after connect, ignore comments for first 3s
 
         @client.on(ConnectEvent)
         async def on_connect(event):
+            nonlocal connected_at
+            connected_at = asyncio.get_event_loop().time()
             print(f"[Connector] ✅ Connected to @{username}")
 
         @client.on(DisconnectEvent)
@@ -70,6 +73,12 @@ async def connect_to(username):
 
         @client.on(CommentEvent)
         async def on_comment(event):
+            # Skip the initial burst of old comments on connect
+            if connected_at is None:
+                return
+            if asyncio.get_event_loop().time() - connected_at < 3:
+                return
+
             try:
                 ui = event.user_info
                 uname = getattr(ui, "nick_name", None) or getattr(ui, "unique_id", None) or "Kak"
