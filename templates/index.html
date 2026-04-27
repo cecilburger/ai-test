@@ -801,11 +801,13 @@ async function processChatQueue(){
   finally{isProcessingChat=false;processChatQueue();}
 }
 
-// TikTok Live SSE
+// TikTok Live SSE — only keep latest comment, drop queue if busy
 const liveSSE=new EventSource(BASE+"/live_stream");
 liveSSE.onmessage=e=>{
   if(!botEnabled)return;
   const{username,text}=JSON.parse(e.data);
+  // clear any pending live comments, only process the freshest one
+  pendingQueue.length=0;
   pendingQueue.push({text,username});
   processChatQueue();
 };
